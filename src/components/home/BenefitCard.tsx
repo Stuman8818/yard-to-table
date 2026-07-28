@@ -14,4 +14,3 @@ export function BenefitCard({ title, description }: BenefitCardProps) {
     </div>
   );
 }
-

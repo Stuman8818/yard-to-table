@@ -1,11 +1,11 @@
-import Image from 'next/image';
-import Link from 'next/link';
+import Image from "next/image";
+import Link from "next/link";
 
 export function Header() {
   return (
     <header
       className="fixed top-0 right-0 left-0 z-50 h-18 shadow-md"
-      style={{ backgroundColor: '#1eb21e' }}
+      style={{ backgroundColor: "#1eb21e" }}
     >
       <div className="mx-auto h-full max-w-7xl px-6 sm:px-8">
         <div className="flex h-full items-center justify-between gap-8">

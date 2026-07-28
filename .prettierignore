@@ -6,3 +6,6 @@ build
 coverage
 *.log
 .env*
+playwright-report
+test-results
+package-lock.json

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import { ChangeEvent, useEffect, useRef, useState } from 'react';
+import Image from "next/image";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 
 export function YardImporter() {
   const [yardImage, setYardImage] = useState<string | null>(null);
