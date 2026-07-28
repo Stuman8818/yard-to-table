@@ -1,64 +1,64 @@
-import { BenefitCard } from '@/components/home/BenefitCard';
-import { ServiceCard } from '@/components/home/ServiceCard';
-import ContactForm from '@/components/home/ContactForm';
-import { Header } from '@/components/Header';
-import Image from 'next/image';
+import { BenefitCard } from "@/components/home/BenefitCard";
+import { ServiceCard } from "@/components/home/ServiceCard";
+import ContactForm from "@/components/home/ContactForm";
+import { Header } from "@/components/Header";
+import Image from "next/image";
 
 const services = [
   {
-    title: 'Lawn mowing',
+    title: "Lawn mowing",
     description:
-      'Keep your grass tidy with reliable mowing that leaves a clean, even finish and healthy curb appeal.',
-    icon: '🌱',
+      "Keep your grass tidy with reliable mowing that leaves a clean, even finish and healthy curb appeal.",
+    icon: "🌱",
   },
   {
-    title: 'Weed eating & trimming',
+    title: "Weed eating & trimming",
     description:
-      'Trim edges and clear hard-to-reach spots around beds, fences, and walkways for a polished yard.',
-    icon: '✂️',
+      "Trim edges and clear hard-to-reach spots around beds, fences, and walkways for a polished yard.",
+    icon: "✂️",
   },
   {
-    title: 'Driveway, sidewalk, patio blow-off',
+    title: "Driveway, sidewalk, patio blow-off",
     description:
-      'Remove grass clippings, leaves, and debris for cleaner outdoor surfaces and a refreshed property.',
-    icon: '🍂',
+      "Remove grass clippings, leaves, and debris for cleaner outdoor surfaces and a refreshed property.",
+    icon: "🍂",
   },
 ];
 
 const benefits = [
   {
-    title: 'Local and reliable',
+    title: "Local and reliable",
     description:
-      'A neighbor-owned service built for nearby homeowners who want a simple, honest experience.',
+      "A neighbor-owned service built for nearby homeowners who want a simple, honest experience.",
   },
   {
-    title: 'Simple, straightforward service',
+    title: "Simple, straightforward service",
     description:
-      'Focused on lawn care with a friendly, practical approach—no hidden fees or upselling.',
+      "Focused on lawn care with a friendly, practical approach—no hidden fees or upselling.",
   },
   {
-    title: 'Clean curb appeal',
+    title: "Clean curb appeal",
     description:
-      'Well-kept grass, edges, and outdoor surfaces that make your home feel well-maintained.',
+      "Well-kept grass, edges, and outdoor surfaces that make your home feel well-maintained.",
   },
   {
-    title: 'Trustworthy and consistent',
-    description: 'Dependable service for homeowners who value reliability and a personal touch.',
+    title: "Trustworthy and consistent",
+    description: "Dependable service for homeowners who value reliability and a personal touch.",
   },
 ];
 
 const gardenPlanningFeatures = [
-  'Garden bed and raised bed design for your yard size.',
-  'Layout ideas for vegetables, herbs, flowers, and small-space growing.',
-  'Guidance on grow bags, trellises, and vertical growing options.',
-  'Plant recommendations matched to your local growing season.',
+  "Garden bed and raised bed design for your yard size.",
+  "Layout ideas for vegetables, herbs, flowers, and small-space growing.",
+  "Guidance on grow bags, trellises, and vertical growing options.",
+  "Plant recommendations matched to your local growing season.",
 ];
 
 const futureFeatures = [
-  'Step-by-step garden care instructions updated seasonally.',
-  'Resource library for maintenance, watering, and troubleshooting.',
-  'Helpful tips for small yards, containers, and compact spaces.',
-  'Tools to track your garden and plan next season.',
+  "Step-by-step garden care instructions updated seasonally.",
+  "Resource library for maintenance, watering, and troubleshooting.",
+  "Helpful tips for small yards, containers, and compact spaces.",
+  "Tools to track your garden and plan next season.",
 ];
 
 export default function Home() {
@@ -70,13 +70,13 @@ export default function Home() {
         {/* Hero Section with Illustration Background */}
         <section
           className="relative overflow-hidden rounded-2xl px-8 py-16 shadow-xl sm:px-12 sm:py-24"
-          style={{ backgroundColor: '#1eb21e' }}
+          style={{ backgroundColor: "#1eb21e" }}
         >
           {/* Decorative background elements */}
           <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
           <div
             className="pointer-events-none absolute -left-32 bottom-0 h-80 w-80 rounded-full blur-3xl"
-            style={{ backgroundColor: 'rgba(0,239,109,0.12)' }}
+            style={{ backgroundColor: "rgba(0,239,109,0.12)" }}
           ></div>
 
           <div className="relative grid gap-12 lg:grid-cols-[1fr_1fr] lg:items-center">
@@ -142,7 +142,7 @@ export default function Home() {
         <section
           id="why"
           className="mt-20 rounded-2xl p-8 shadow-lg sm:p-12"
-          style={{ backgroundColor: '#8f6641' }}
+          style={{ backgroundColor: "#8f6641" }}
         >
           <div className="mx-auto max-w-4xl">
             <p className="text-base font-bold uppercase tracking-widest text-white">
@@ -166,7 +166,7 @@ export default function Home() {
         <section
           id="garden-planning"
           className="mt-20 rounded-2xl p-8 shadow-lg sm:p-12"
-          style={{ backgroundColor: '#8f6641' }}
+          style={{ backgroundColor: "#8f6641" }}
         >
           <div className="mx-auto max-w-4xl">
             <p className="text-base font-bold uppercase tracking-widest text-white">
@@ -203,7 +203,7 @@ export default function Home() {
 
         <section
           className="mt-20 rounded-2xl p-8 shadow-lg sm:p-12"
-          style={{ backgroundColor: '#8f6641' }}
+          style={{ backgroundColor: "#8f6641" }}
         >
           <div className="mx-auto max-w-4xl">
             <p className="text-base font-bold uppercase tracking-widest text-white">
@@ -240,7 +240,7 @@ export default function Home() {
         <section
           id="service-area"
           className="mt-16 rounded-[2rem] border p-8 shadow-lg sm:p-10"
-          style={{ backgroundColor: '#8f6641', borderColor: 'rgba(255,255,255,0.08)' }}
+          style={{ backgroundColor: "#8f6641", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <div className="grid gap-4 sm:grid-cols-[1.1fr_0.9fr] sm:items-center">
             <div>
@@ -266,7 +266,7 @@ export default function Home() {
         <section
           id="contact"
           className="mt-20 rounded-2xl border p-8 shadow-lg sm:p-12"
-          style={{ backgroundColor: '#8f6641', borderColor: 'rgba(255,255,255,0.08)' }}
+          style={{ backgroundColor: "#8f6641", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-base font-semibold uppercase tracking-widest text-white">Contact</p>
@@ -286,7 +286,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer style={{ backgroundColor: '#8f6641' }} className="py-12 shadow-inner">
+      <footer style={{ backgroundColor: "#8f6641" }} className="py-12 shadow-inner">
         <div className="mx-auto max-w-7xl px-6 sm:px-8">
           <div className="grid gap-8 md:grid-cols-2">
             <div>

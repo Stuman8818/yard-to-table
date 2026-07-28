@@ -1,10 +1,10 @@
-import type { Metadata } from 'next';
-import { Header } from '@/components/Header';
-import { YardImporter } from '@/components/garden-planner/YardImporter';
+import type { Metadata } from "next";
+import { Header } from "@/components/Header";
+import { YardImporter } from "@/components/garden-planner/YardImporter";
 
 export const metadata: Metadata = {
-  title: 'Garden Planner | Yard To Table',
-  description: 'Import a yard image to start planning your garden layout.',
+  title: "Garden Planner | Yard To Table",
+  description: "Import a yard image to start planning your garden layout.",
 };
 
 export default function GardenPlannerPage() {

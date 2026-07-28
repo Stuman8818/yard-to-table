@@ -7,6 +7,7 @@ This is a Next.js garden-planning web application.
 The goal is to help homeowners plan gardens for their yard, starting locally and later scaling to county, state, and national coverage.
 
 The app should help users:
+
 - Choose plants based on location, sun exposure, garden size, and goals
 - Plan vegetable, herb, flower, and pollinator gardens
 - View plant care instructions
@@ -41,6 +42,7 @@ The app should help users:
 The first target market is local homeowners. SEO is important. Public pages should be easy for Google to index.
 
 Important future pages:
+
 - Plant detail pages
 - Local gardening pages
 - County-level pages
