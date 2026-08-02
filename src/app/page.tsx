@@ -1,321 +1,554 @@
-import { BenefitCard } from "@/components/home/BenefitCard";
-import { ServiceCard } from "@/components/home/ServiceCard";
 import ContactForm from "@/components/home/ContactForm";
 import { Header } from "@/components/Header";
-import { serviceDefinitions } from "@/lib/services";
+import { serviceDefinitions, type ServiceType } from "@/lib/services";
 import Image from "next/image";
 
-const services = [
+const productSteps = [
   {
-    title: serviceDefinitions.LAWN_CARE.label,
-    description: serviceDefinitions.LAWN_CARE.description,
-    icon: "🌱",
+    number: "01",
+    title: "Understand the property",
+    description: "Capture the property, goals, access details, measurements, and seasonal needs.",
   },
   {
-    title: "Included: trimming & edging",
+    number: "02",
+    title: "Create the right plan",
     description:
-      "Trim edges and clear hard-to-reach spots around beds, fences, and walkways for a polished yard.",
-    icon: "✂️",
+      "Connect lawn care, garden design, installation ideas, and maintenance around the same outdoor space.",
   },
   {
-    title: "Included: paved-area cleanup",
+    number: "03",
+    title: "Manage what comes next",
     description:
-      "Remove grass clippings, leaves, and debris for cleaner outdoor surfaces and a refreshed property.",
-    icon: "🍂",
+      "Keep assessments, recommendations, estimates, projects, and future care organized in one place.",
   },
 ];
 
-const benefits = [
+const roadmap = [
   {
-    title: "Local and reliable",
+    phase: "Now",
+    title: "Business and product foundation",
     description:
-      "A neighbor-owned service built for nearby homeowners who want a simple, honest experience.",
+      "Build the lead workflow, property model, launch identity, service definitions, and operational application.",
+    active: true,
   },
   {
-    title: "Simple, straightforward service",
+    phase: "Next",
+    title: "Pilot preparation",
     description:
-      "Focused on lawn care with a friendly, practical approach—no hidden fees or upselling.",
+      "Prepare lawn-care operations, property assessments, consultations, estimates, and an initial Indiana service area.",
+    active: false,
   },
   {
-    title: "Clean curb appeal",
+    phase: "Later",
+    title: "Garden installation and ongoing care",
     description:
-      "Well-kept grass, edges, and outdoor surfaces that make your home feel well-maintained.",
-  },
-  {
-    title: "Trustworthy and consistent",
-    description: "Dependable service for homeowners who value reliability and a personal touch.",
+      "Expand into garden planning, installation tracking, seasonal maintenance, customer approvals, and long-term property history.",
+    active: false,
   },
 ];
 
-const gardenPlanningFeatures = [
-  "Garden bed and raised bed design for your yard size.",
-  "Layout ideas for vegetables, herbs, flowers, and small-space growing.",
-  "Guidance on grow bags, trellises, and vertical growing options.",
-  "Plant recommendations matched to your local growing season.",
-];
+const serviceEntries = Object.entries(serviceDefinitions) as [
+  ServiceType,
+  (typeof serviceDefinitions)[ServiceType],
+][];
 
-const futureFeatures = [
-  "Step-by-step garden care instructions updated seasonally.",
-  "Resource library for maintenance, watering, and troubleshooting.",
-  "Helpful tips for small yards, containers, and compact spaces.",
-  "Tools to track your garden and plan next season.",
+const operatingPlatformFeatures = [
+  [
+    "Organized property records",
+    "A shared foundation for property details, service interests, photos, and future work.",
+    "In development",
+  ],
+  [
+    "Structured assessments",
+    "Consistent property observations and recommendations instead of disconnected notes.",
+    "Planned",
+  ],
+  [
+    "Clear estimates and plans",
+    "A future workflow for turning assessments into understandable scopes and next steps.",
+    "Planned",
+  ],
+  [
+    "Long-term yard history",
+    "One place to build context across lawn care, garden projects, and changing seasons.",
+    "Planned",
+  ],
+] as const;
+
+const engineeringOutcomes = [
+  "Typed GraphQL lead-submission workflow",
+  "Shared client and server validation",
+  "Prisma service-layer architecture",
+  "Separate development and production databases",
+  "Secure server-side email notifications",
+  "Automated quality checks with GitHub Actions",
 ];
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-[#f6f4ed] text-[#1e2923]">
       <Header />
 
-      <main className="mx-auto max-w-7xl px-6 pb-16 pt-32 sm:px-8">
-        {/* Hero Section with Illustration Background */}
-        <section
-          className="relative overflow-hidden rounded-2xl px-8 py-16 shadow-xl sm:px-12 sm:py-24"
-          style={{ backgroundColor: "#1eb21e" }}
-        >
-          {/* Decorative background elements */}
-          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
-          <div
-            className="pointer-events-none absolute -left-32 bottom-0 h-80 w-80 rounded-full blur-3xl"
-            style={{ backgroundColor: "rgba(0,239,109,0.12)" }}
-          ></div>
-
-          <div className="relative grid gap-12 lg:grid-cols-[1fr_1fr] lg:items-center">
+      <main>
+        <section className="relative overflow-hidden bg-[#173f32] pt-28 text-white sm:pt-32">
+          <div className="pointer-events-none absolute inset-0 hero-grid opacity-20" />
+          <div className="relative mx-auto grid max-w-[1200px] gap-14 px-6 py-20 sm:px-8 sm:py-24 lg:grid-cols-[1.03fr_0.97fr] lg:items-center lg:py-28">
             <div className="max-w-2xl">
-              <div className="mb-6 inline-flex rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
-                <p className="text-base font-semibold text-white">Lawn Care Made Simple</p>
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#b9d4bd]/40 bg-white/5 px-3 py-1.5 text-sm font-semibold text-[#dcebdc]">
+                <span className="h-2 w-2 rounded-full bg-[#b7d36b]" aria-hidden="true" />
+                Currently in development
               </div>
-              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-                Keep Your Yard Looking Great
-              </h1>
-              <p className="mt-6 max-w-xl text-lg leading-8 text-white">
-                Professional local lawn mowing, trimming, and cleanup service. We handle the hard
-                work so you can enjoy your outdoor space.
+              <p className="mt-8 text-sm font-bold uppercase tracking-[0.2em] text-[#b9d4bd]">
+                Lawn care and garden services—launching soon
               </p>
-              <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-                <a
-                  href="#contact"
-                  className="inline-flex items-center justify-center rounded-full bg-white border-2 border-[#1eb21e] px-8 py-3 text-base font-semibold text-black shadow-lg transition hover:bg-[#8f6641] hover:text-white"
-                >
-                  Request Service
+              <h1 className="mt-5 max-w-xl text-5xl font-semibold leading-[1.05] tracking-[-0.04em] text-balance sm:text-6xl">
+                A better way to care for your yard and grow what comes next.
+              </h1>
+              <p className="mt-7 max-w-xl text-lg leading-8 text-[#d5e1d9]">
+                Yard To Table is building a local lawn-care, garden-planning, and installation
+                service supported by a custom property-management application.
+              </p>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-[#b9c9bf]">
+                We are currently preparing for launch in Indiana. Services are not yet available,
+                but you can join the early interest list and follow the build.
+              </p>
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                <a className="button-primary" href="#services">
+                  Explore planned services
+                  <ArrowIcon />
                 </a>
-                <a
-                  href="#services"
-                  className="inline-flex items-center justify-center rounded-full bg-white border-2 border-[#1eb21e] px-8 py-3 text-base font-semibold text-black transition hover:bg-[#8f6641] hover:text-white"
-                >
-                  See Services
+                <a className="button-secondary-dark" href="#interest">
+                  Join the interest list
                 </a>
               </div>
             </div>
 
-            {/* Illustration replaced with site logo */}
-            <div className="relative h-80 rounded-2xl bg-white/10 p-8 shadow-2xl sm:h-96">
-              <Image
-                src="/yard-to-table-logo.png"
-                alt="Yard To Table Logo"
-                width={320}
-                height={320}
-                className="mx-auto h-full w-auto object-contain"
-              />
+            <div>
+              <ProductPreview />
+              <p className="mt-4 text-center text-xs font-semibold uppercase tracking-[0.14em] text-[#a9c3b0]">
+                Powered by the Yard To Table operating platform
+              </p>
             </div>
           </div>
         </section>
 
-        <section id="services" className="mt-20">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-base font-bold uppercase tracking-widest text-[#1eb21e]">
-              Current Services
-            </p>
-            <h2 className="mt-4 text-3xl font-bold text-slate-950 sm:text-4xl">
-              Complete Lawn Care Solutions
-            </h2>
-            <p className="mt-4 text-lg text-slate-600">
-              Professional service that keeps your yard looking its best, week after week.
-            </p>
-          </div>
-          <div className="mt-12 grid gap-8 grid-cols-1 sm:grid-cols-3 mx-auto max-w-5xl">
-            {services.map((service) => (
-              <ServiceCard key={service.title} {...service} />
-            ))}
-          </div>
-        </section>
-
-        <section
-          id="why"
-          className="mt-20 rounded-2xl p-8 shadow-lg sm:p-12"
-          style={{ backgroundColor: "#8f6641" }}
-        >
-          <div className="mx-auto max-w-4xl">
-            <p className="text-base font-bold uppercase tracking-widest text-white">
-              Why Choose Us
-            </p>
-            <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl">
-              A local lawn care service you can trust
-            </h2>
-            <p className="mt-6 text-lg text-white/90">
-              We&apos;re built for homeowners who want dependable service, beautiful outdoor spaces,
-              and a partner who genuinely cares about the details.
-            </p>
-            <div className="mt-12 grid gap-6 sm:grid-cols-2">
-              {benefits.map((benefit) => (
-                <BenefitCard key={benefit.title} {...benefit} />
+        <section id="how-it-works" className="scroll-mt-24 border-b border-[#dfe4db] bg-[#fbfaf6]">
+          <div className="mx-auto max-w-[1200px] px-6 py-20 sm:px-8 sm:py-28">
+            <SectionIntro
+              eyebrow="How Yard To Table works"
+              title="From the first property visit to ongoing care."
+              description="The planned service experience connects what a homeowner needs today with an organized view of the property and what it may need next."
+            />
+            <div className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-[#dfe4db] bg-[#dfe4db] lg:grid-cols-3">
+              {productSteps.map((step) => (
+                <article key={step.number} className="bg-white p-7 sm:p-9">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-sm text-[#607468]">{step.number}</span>
+                    <span className="h-px w-12 bg-[#b8c8bb]" aria-hidden="true" />
+                  </div>
+                  <h3 className="mt-10 text-xl font-semibold tracking-[-0.02em]">{step.title}</h3>
+                  <p className="mt-3 leading-7 text-[#5b6860]">{step.description}</p>
+                </article>
               ))}
             </div>
           </div>
         </section>
 
-        <section
-          id="garden-planning"
-          className="mt-20 rounded-2xl p-8 shadow-lg sm:p-12"
-          style={{ backgroundColor: "#8f6641" }}
-        >
-          <div className="mx-auto max-w-4xl">
-            <p className="text-base font-bold uppercase tracking-widest text-white">
-              Coming Next Year
-            </p>
-            <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl">
-              Garden planning & installation service
-            </h2>
-            <p className="mt-6 text-lg text-white/90">
-              Next year, Yard To Table is expanding to help you design and install a garden that
-              fits your yard perfectly. We&apos;ll work with garden beds, raised beds, grow bags,
-              trellises, and vertical growing to maximize your space.
-            </p>
-            <div className="mt-12">
-              <p className="mb-8 text-base font-bold uppercase tracking-widest text-white">
-                Planning service includes:
-              </p>
+        <section id="services" className="scroll-mt-24 bg-[#edf2e9]">
+          <div className="mx-auto max-w-[1200px] px-6 py-20 sm:px-8 sm:py-28">
+            <div className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20">
+              <div>
+                <SectionIntro
+                  eyebrow="Planned services"
+                  title="Practical services built around the whole property."
+                  description="Yard To Table plans to begin with dependable lawn care and expand into garden consultation, installation, and ongoing seasonal support."
+                />
+                <div className="mt-8 rounded-xl border border-[#ccd8ca] bg-[#e4eadf] p-5 text-sm leading-6 text-[#526158]">
+                  <strong className="block font-semibold text-[#244436]">Pre-launch note</strong>
+                  These services are still being prepared and are not currently available for
+                  purchase or scheduling.
+                </div>
+              </div>
+
               <div className="grid gap-4 sm:grid-cols-2">
-                {gardenPlanningFeatures.map((feature) => (
-                  <div
-                    key={feature}
-                    className="rounded-xl bg-white p-6 shadow-sm transition hover:shadow-md"
+                {serviceEntries.map(([value, service], index) => (
+                  <article
+                    key={value}
+                    className="group rounded-xl border border-[#d5ded2] bg-[#fbfcf8] p-6 transition-colors hover:border-[#9eb49f]"
                   >
-                    <div className="flex gap-3">
-                      <div className="mt-1 text-white text-xl">→</div>
-                      <p className="text-base leading-6 text-slate-700">{feature}</p>
+                    <div className="flex items-start justify-between gap-4">
+                      <ServiceIcon index={index} />
+                      <span className="rounded-full bg-[#e5ebe2] px-2.5 py-1 text-xs font-semibold text-[#52665a]">
+                        {value === "LAWN_CARE"
+                          ? "Launch service"
+                          : value === "GARDEN_MAINTENANCE"
+                            ? "Future offering"
+                            : "Planned"}
+                      </span>
                     </div>
-                  </div>
+                    <h3 className="mt-7 text-lg font-semibold tracking-[-0.01em]">
+                      {service.label}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-[#607067]">{service.description}</p>
+                  </article>
                 ))}
               </div>
             </div>
           </div>
         </section>
 
-        <section
-          className="mt-20 rounded-2xl p-8 shadow-lg sm:p-12"
-          style={{ backgroundColor: "#8f6641" }}
-        >
-          <div className="mx-auto max-w-4xl">
-            <p className="text-base font-bold uppercase tracking-widest text-white">
-              Future Website Features
-            </p>
-            <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl">
-              Garden care resources & insights
-            </h2>
-            <p className="mt-6 text-lg text-white/90">
-              Down the road, this site will become a helpful resource for garden care throughout the
-              season. We may also explore subscription options for ongoing maintenance.
-            </p>
-            <div className="mt-12">
-              <p className="mb-8 text-base font-bold uppercase tracking-widest text-white">
-                Planned features:
-              </p>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {futureFeatures.map((feature) => (
-                  <div
-                    key={feature}
-                    className="rounded-xl bg-white p-6 shadow-sm transition hover:shadow-md"
-                  >
-                    <div className="flex gap-3">
-                      <div className="mt-1 text-white text-xl">✓</div>
-                      <p className="text-base leading-6 text-slate-700">{feature}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+        <section id="platform" className="scroll-mt-24 border-b border-[#dfe4db] bg-[#fbfaf6]">
+          <div className="mx-auto max-w-[1200px] px-6 py-20 sm:px-8 sm:py-28">
+            <SectionIntro
+              eyebrow="Built differently"
+              title="A service company powered by its own software."
+              description="Instead of managing leads, property notes, assessments, estimates, photos, and seasonal plans across disconnected tools, Yard To Table is building one application around the entire customer and property journey."
+            />
+            <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {operatingPlatformFeatures.map(([title, description, status]) => (
+                <article key={title} className="rounded-xl border border-[#dce2da] bg-white p-6">
+                  <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[#617468]">
+                    {status}
+                  </span>
+                  <h3 className="mt-6 text-lg font-semibold tracking-[-0.015em]">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#637068]">{description}</p>
+                </article>
+              ))}
             </div>
           </div>
         </section>
 
-        <section
-          id="service-area"
-          className="mt-16 rounded-[2rem] border p-8 shadow-lg sm:p-10"
-          style={{ backgroundColor: "#8f6641", borderColor: "rgba(255,255,255,0.08)" }}
-        >
-          <div className="grid gap-4 sm:grid-cols-[1.1fr_0.9fr] sm:items-center">
+        <section className="bg-[#e8eee5]">
+          <div className="mx-auto grid max-w-[1200px] gap-10 px-6 py-16 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
             <div>
-              <p className="text-base font-semibold uppercase tracking-[0.25em] text-white">
-                Service Area
-              </p>
-              <h2 className="mt-3 text-3xl font-semibold text-white">
-                Currently Servicing North Noblesville
+              <p className="eyebrow">Behind the build</p>
+              <h2 className="mt-4 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
+                A production-minded full-stack application.
               </h2>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-white/90">
-                Currently servicing North Noblesville and nearby neighborhoods.
+              <p className="mt-4 max-w-lg leading-7 text-[#59675e]">
+                Next.js, TypeScript, GraphQL, Apollo, Prisma, Neon Postgres, Zod, Resend, GitHub
+                Actions, and Vercel support a realistic business workflow—not a static demo.
               </p>
             </div>
-            <div className="rounded-3xl bg-white/10 p-6 text-base text-white shadow-sm">
-              <p className="font-semibold text-white">Currently servicing North Noblesville.</p>
-              <p className="mt-3 leading-7">
-                Perfect for homeowners who want friendly local service without the corporate feel.
-              </p>
+            <ul className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
+              {engineeringOutcomes.map((outcome) => (
+                <li
+                  key={outcome}
+                  className="flex items-start gap-3 border-t border-[#cbd7ca] pt-3 text-sm font-medium text-[#405247]"
+                >
+                  <span
+                    className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#6d8d72]"
+                    aria-hidden="true"
+                  />
+                  {outcome}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section id="roadmap" className="scroll-mt-24 bg-[#203b31] text-white">
+          <div className="mx-auto max-w-[1200px] px-6 py-20 sm:px-8 sm:py-28">
+            <div className="grid gap-12 lg:grid-cols-[0.75fr_1.25fr] lg:gap-20">
+              <div>
+                <p className="eyebrow text-[#a9c6ae]">Business and product roadmap</p>
+                <h2 className="mt-4 max-w-md text-4xl font-semibold tracking-[-0.035em] text-balance sm:text-5xl">
+                  Building the operational layer, one phase at a time.
+                </h2>
+                <p className="mt-6 max-w-md leading-7 text-[#c7d4cb]">
+                  These planned phases bring the service company and its operating application
+                  forward together. They are direction—not promises of availability or timing.
+                </p>
+                <a
+                  className="mt-8 inline-flex items-center gap-2 font-semibold text-[#d7e8d8]"
+                  href="/garden-planner"
+                >
+                  Explore the garden planner
+                  <ArrowIcon />
+                </a>
+              </div>
+
+              <ol className="border-l border-white/20">
+                {roadmap.map((item) => (
+                  <li
+                    key={item.phase}
+                    className="relative border-b border-white/15 py-7 pl-8 first:pt-1 last:border-0"
+                  >
+                    <span
+                      className={`absolute -left-[5px] top-9 h-2.5 w-2.5 rounded-full ${item.active ? "bg-[#b7d36b]" : "bg-[#70867a]"}`}
+                      aria-hidden="true"
+                    />
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
+                      <h3 className="text-xl font-semibold">{item.title}</h3>
+                      <span className="font-mono text-xs uppercase tracking-[0.16em] text-[#9fb5a5]">
+                        {item.phase}
+                      </span>
+                    </div>
+                    <p className="mt-2 max-w-xl leading-7 text-[#bdcbc1]">{item.description}</p>
+                  </li>
+                ))}
+              </ol>
             </div>
           </div>
         </section>
 
-        <section
-          id="contact"
-          className="mt-20 rounded-2xl border p-8 shadow-lg sm:p-12"
-          style={{ backgroundColor: "#8f6641", borderColor: "rgba(255,255,255,0.08)" }}
-        >
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-base font-semibold uppercase tracking-widest text-white">Contact</p>
-            <h2 className="mt-4 text-3xl font-semibold text-white sm:text-4xl">
-              Ready to request lawn service?
-            </h2>
-            <p className="mt-6 text-lg font-semibold text-white">
-              Reach out with a quick call, text, or email today, and we&apos;ll follow up with
-              details and availability.
-            </p>
-            <div className="mt-10">
-              <div className="rounded-xl bg-[#8f6641] p-6">
-                <ContactForm />
+        <section id="interest" className="scroll-mt-24 bg-[#f6f4ed]">
+          <div className="mx-auto grid max-w-[1200px] gap-12 px-6 py-20 sm:px-8 sm:py-28 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20">
+            <div>
+              <p className="eyebrow">Early interest</p>
+              <h2 className="mt-4 text-4xl font-semibold tracking-[-0.035em] text-balance sm:text-5xl">
+                Interested in future Yard To Table services?
+              </h2>
+              <p className="mt-6 leading-7 text-[#59665e]">
+                Tell us which lawn or garden services would be useful for your property. This form
+                helps shape the initial launch and does not schedule or purchase a service.
+              </p>
+              <div className="mt-8 border-l-2 border-[#91a994] pl-5 text-sm leading-6 text-[#647169]">
+                Yard To Table is currently preparing for an Indiana launch. Availability, pricing,
+                and timing have not yet been announced.
               </div>
+            </div>
+            <div className="rounded-2xl border border-[#d9ded6] bg-white p-5 shadow-[0_20px_60px_rgba(32,59,49,0.08)] sm:p-8">
+              <ContactForm />
             </div>
           </div>
         </section>
       </main>
 
-      <footer style={{ backgroundColor: "#8f6641" }} className="py-12 shadow-inner">
-        <div className="mx-auto max-w-7xl px-6 sm:px-8">
-          <div className="grid gap-8 md:grid-cols-2">
+      <footer className="border-t border-[#d8ddd5] bg-[#eef0e9]">
+        <div className="mx-auto flex max-w-[1200px] flex-col gap-8 px-6 py-10 sm:px-8 md:flex-row md:items-end md:justify-between">
+          <div className="flex items-center gap-5">
+            <Image
+              src="/yard-to-table-logo.png"
+              alt="Yard To Table original illustrated logo"
+              width={112}
+              height={112}
+              className="h-24 w-24 shrink-0 rounded-xl border border-[#d8ddd5] bg-[#f8f5ec] object-contain p-2 shadow-sm sm:h-28 sm:w-28"
+            />
             <div>
-              <p className="text-lg font-bold text-white">Yard To Table</p>
-              <p className="mt-3 max-w-md text-base leading-6 text-white/90">
-                Local lawn care today. Garden planning coming next year. Professional service,
-                friendly approach.
+              <p className="text-lg font-semibold tracking-[-0.02em]">Yard To Table</p>
+              <p className="mt-2 max-w-md text-sm leading-6 text-[#647068]">
+                Yard To Table is a pre-launch lawn-care and garden-services company building a
+                custom platform for property planning, service operations, and long-term care.
+              </p>
+              <p className="mt-1 max-w-md text-xs leading-5 text-[#79837d]">
+                The application also serves as a full-stack software engineering case study.
               </p>
             </div>
-            <div className="flex flex-col gap-4 md:items-end">
-              <div className="flex flex-wrap gap-6 text-base font-medium">
-                <a href="#services" className="text-white transition hover:text-[#1eb21e]">
-                  Services
-                </a>
-                <a href="#why" className="text-white transition hover:text-[#1eb21e]">
-                  Why Us
-                </a>
-                <a href="#garden-planning" className="text-white transition hover:text-[#1eb21e]">
-                  Garden Planning
-                </a>
-                <a href="#contact" className="text-white transition hover:text-[#1eb21e]">
-                  Contact
-                </a>
-              </div>
-              <p className="text-xs text-white/80">© 2026 Yard To Table. All rights reserved.</p>
-            </div>
+          </div>
+          <div className="flex flex-col gap-4 text-sm md:items-end">
+            <nav aria-label="Footer navigation" className="flex flex-wrap gap-x-6 gap-y-2">
+              <a href="#platform">The platform</a>
+              <a href="#services">Services</a>
+              <a href="#roadmap">Roadmap</a>
+              <a href="#interest">Early interest</a>
+            </nav>
+            <p className="text-xs text-[#79837d]">© 2026 Yard To Table. All rights reserved.</p>
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function SectionIntro({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="max-w-2xl">
+      <p className="eyebrow">{eyebrow}</p>
+      <h2 className="mt-4 text-4xl font-semibold tracking-[-0.035em] text-balance sm:text-5xl">
+        {title}
+      </h2>
+      <p className="mt-5 max-w-xl leading-7 text-[#5b6860]">{description}</p>
+    </div>
+  );
+}
+
+function ArrowIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 16 16"
+      className="h-4 w-4 fill-none stroke-current stroke-2"
+    >
+      <path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" />
+    </svg>
+  );
+}
+
+function ServiceIcon({ index }: { index: number }) {
+  const paths = [
+    "M4 17c5-1 8-5 9-12 4 5 3 12-3 14M4 17c2-4 5-7 9-9",
+    "M6 17V9m0 0c0-3 2-5 5-5 0 3-2 5-5 5Zm0 3c0-3-2-5-5-5 0 3 2 5 5 5Z",
+    "M3 18h14M5 18v-7h10v7M8 11V7h4v4M7 15h2m2 0h2",
+  ];
+  return (
+    <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#cbd8c9] bg-[#edf3e9] text-[#365b46]">
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 20 20"
+        className="h-5 w-5 fill-none stroke-current stroke-[1.5]"
+      >
+        <path d={paths[index % paths.length]} />
+      </svg>
+    </span>
+  );
+}
+
+function ProductPreview() {
+  return (
+    <div
+      className="relative mx-auto w-full max-w-[540px]"
+      aria-label="Concept preview of the internal Yard To Table property-planning system"
+      role="img"
+    >
+      <div className="absolute -inset-6 rounded-[2rem] bg-[#82a489]/10 blur-2xl" />
+      <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-[#f7f6ef] p-3 shadow-[0_32px_80px_rgba(7,27,20,0.35)] sm:p-4">
+        <div className="flex items-center justify-between border-b border-[#dfe4db] px-2 pb-3">
+          <div className="flex items-center gap-1.5" aria-hidden="true">
+            <span className="h-2 w-2 rounded-full bg-[#d7aa83]" />
+            <span className="h-2 w-2 rounded-full bg-[#d8d28e]" />
+            <span className="h-2 w-2 rounded-full bg-[#8eae91]" />
+          </div>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#68766d]">
+            Property plan
+          </span>
+        </div>
+        <div className="grid gap-3 pt-3 sm:grid-cols-[1.25fr_0.75fr]">
+          <div className="relative min-h-72 overflow-hidden rounded-xl bg-[#dce8d7] p-5 sm:min-h-96">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 320 360"
+              className="absolute inset-0 h-full w-full"
+            >
+              <defs>
+                <pattern id="plan-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <path
+                    d="M20 0H0v20"
+                    fill="none"
+                    stroke="#78957e"
+                    strokeWidth=".5"
+                    opacity=".28"
+                  />
+                </pattern>
+              </defs>
+              <rect width="320" height="360" fill="#dfe9dc" />
+              <rect width="320" height="360" fill="url(#plan-grid)" />
+              <rect
+                x="20"
+                y="18"
+                width="280"
+                height="324"
+                rx="8"
+                fill="#c8dbc3"
+                stroke="#5f8067"
+                strokeDasharray="5 4"
+              />
+              <path d="M32 154h256v176H32z" fill="#93b287" opacity=".92" />
+              <path
+                d="M167 142c0 58-15 89-43 122s-42 59-42 66"
+                fill="none"
+                stroke="#eee7d5"
+                strokeWidth="25"
+              />
+              <path
+                d="M167 142c0 58-15 89-43 122s-42 59-42 66"
+                fill="none"
+                stroke="#c8bda3"
+                strokeWidth="1.5"
+                strokeDasharray="4 5"
+              />
+              <rect x="45" y="39" width="123" height="90" rx="4" fill="#f2ecdc" stroke="#8f8978" />
+              <rect x="62" y="56" width="47" height="31" rx="2" fill="#d7c8ae" />
+              <rect x="114" y="56" width="37" height="58" rx="2" fill="#d7c8ae" />
+              <text x="57" y="105" fill="#6c685e" fontSize="9" fontWeight="600">
+                RESIDENCE
+              </text>
+              <g fill="#8f6641" stroke="#6f4e34">
+                <rect x="195" y="55" width="70" height="22" rx="3" />
+                <rect x="195" y="84" width="70" height="22" rx="3" />
+                <rect x="195" y="113" width="70" height="22" rx="3" />
+              </g>
+              <g stroke="#d9c493" strokeWidth="1" opacity=".8">
+                <path d="M205 59v14m12-14v14m12-14v14m12-14v14m12-14v14" />
+                <path d="M205 88v14m12-14v14m12-14v14m12-14v14m12-14v14" />
+                <path d="M205 117v14m12-14v14m12-14v14m12-14v14m12-14v14" />
+              </g>
+              <text x="198" y="150" fill="#48634e" fontSize="9" fontWeight="600">
+                GARDEN BEDS
+              </text>
+              <path d="M38 199h79v52H38z" fill="#789d72" stroke="#54755a" strokeDasharray="3 3" />
+              <text x="49" y="228" fill="#eef4e9" fontSize="9" fontWeight="600">
+                LAWN ZONE A
+              </text>
+              <path
+                d="M176 180h102v120H176z"
+                fill="#83a878"
+                stroke="#54755a"
+                strokeDasharray="3 3"
+              />
+              <text x="196" y="243" fill="#eef4e9" fontSize="9" fontWeight="600">
+                LAWN ZONE B
+              </text>
+              <circle cx="55" cy="294" r="28" fill="#66896b" opacity=".9" />
+              <circle cx="274" cy="301" r="22" fill="#66896b" opacity=".85" />
+              <text x="38" y="335" fill="#4c6752" fontSize="8" fontWeight="600">
+                AFTERNOON SHADE
+              </text>
+              <g fill="#f8faf5" stroke="#315a43" strokeWidth="2">
+                <circle cx="168" cy="146" r="10" />
+                <circle cx="190" cy="208" r="10" />
+                <circle cx="121" cy="286" r="10" />
+              </g>
+              <g fill="#315a43" fontSize="9" fontWeight="700" textAnchor="middle">
+                <text x="168" y="149">
+                  1
+                </text>
+                <text x="190" y="211">
+                  2
+                </text>
+                <text x="121" y="289">
+                  3
+                </text>
+              </g>
+            </svg>
+            <div className="absolute bottom-4 left-4 rounded-lg bg-white/90 px-3 py-2 shadow-sm">
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#6d796f]">
+                Property overview
+              </p>
+              <p className="mt-0.5 text-xs font-semibold text-[#263e32]">3 plan markers</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-1">
+            {[
+              ["Property", "4 mapped zones"],
+              ["Lawn care", "Launch workflow"],
+              ["Garden plan", "3 raised beds"],
+              ["Site notes", "Access mapped"],
+            ].map(([label, value], index) => (
+              <div key={label} className="rounded-xl border border-[#dfe4db] bg-white p-3.5">
+                <div className="flex items-center justify-between">
+                  <span
+                    className={`h-2 w-2 rounded-full ${index === 1 ? "bg-[#b7d36b]" : "bg-[#8ba58e]"}`}
+                  />
+                  <span className="font-mono text-[9px] text-[#879189]">0{index + 1}</span>
+                </div>
+                <p className="mt-5 text-[10px] uppercase tracking-[0.1em] text-[#78847b]">
+                  {label}
+                </p>
+                <p className="mt-1 text-xs font-semibold text-[#2d4136]">{value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

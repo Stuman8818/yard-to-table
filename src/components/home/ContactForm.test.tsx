@@ -36,7 +36,7 @@ async function completeForm() {
   await user.type(screen.getByLabelText("ZIP code"), variables.input.postalCode);
   await user.type(screen.getByLabelText("Email address"), variables.input.email);
   await user.type(screen.getByLabelText("Notes"), variables.input.message);
-  await user.click(screen.getByRole("button", { name: "Send Request" }));
+  await user.click(screen.getByRole("button", { name: "Join the early interest list" }));
 }
 
 describe("ContactForm", () => {
@@ -72,7 +72,7 @@ describe("ContactForm", () => {
 
     expect(screen.getByLabelText("State")).toHaveValue("IN");
     expect(screen.getByLabelText("State")).toBeDisabled();
-    expect(screen.getByText("Currently serving Indiana only.")).toBeInTheDocument();
+    expect(screen.getByText("Preparing for an initial Indiana launch.")).toBeInTheDocument();
   });
 
   it("shows success and resets the form after a confirmed submission", async () => {
@@ -101,7 +101,7 @@ describe("ContactForm", () => {
     await completeForm();
 
     expect(await screen.findByRole("status")).toHaveTextContent(
-      "Your request was submitted. We’ll be in touch soon.",
+      "Thanks—your interest has been recorded.",
     );
     expect(screen.getByLabelText("First name")).toHaveValue("");
     expect(screen.getByLabelText("Last name")).toHaveValue("");
@@ -126,7 +126,7 @@ describe("ContactForm", () => {
     await completeForm();
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "We couldn’t submit your request. Please try again.",
+      "We couldn’t record your interest. Please try again.",
     );
     expect(screen.getByLabelText("First name")).toHaveValue("Jane");
     expect(screen.getByLabelText("Last name")).toHaveValue("Gardner");
