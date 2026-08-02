@@ -45,17 +45,16 @@ export function Header() {
 
 function BrandMark() {
   return (
-    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-[#dcebdc]">
-      <svg
-        role="img"
-        aria-label="Yard To Table brand mark"
-        viewBox="0 0 32 32"
-        className="h-7 w-7 fill-none stroke-current stroke-[1.8]"
-      >
-        <path d="M6 18.5 16 23l10-4.5L16 14 6 18.5Z" />
-        <path d="M6 18.5v5L16 28l10-4.5v-5M16 23v5" />
-        <path d="M16 14V8.5m0 1.5c-4.5 0-6.5-2.2-6.5-5.5 4.2 0 6.5 2 6.5 5.5Zm0-1.5c0-3.3 2.2-5.5 6.5-5.5 0 3.3-2.1 5.5-6.5 5.5Z" />
-      </svg>
+    <span
+      role="img"
+      aria-label="Yard To Table brand mark"
+      className="flex h-11 w-12 shrink-0 flex-col items-center justify-center rounded-lg border border-white/20 bg-white/10 text-[#f2f7ef]"
+    >
+      <span className="text-[15px] leading-none font-extrabold tracking-[0.08em]">YTT</span>
+      <span
+        className="mt-1 h-1.5 w-8 rounded-b-sm border-x border-b border-[#b7d36b]"
+        aria-hidden="true"
+      />
     </span>
   );
 }

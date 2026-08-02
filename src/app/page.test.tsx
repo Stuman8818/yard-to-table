@@ -49,6 +49,7 @@ describe("homepage positioning", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Yard To Table brand mark")).toBeInTheDocument();
     expect(screen.getByText("Powered by the Yard To Table operating platform")).toBeInTheDocument();
+    expect(screen.getByAltText("Yard To Table original illustrated logo")).toBeInTheDocument();
   });
 
   it("uses valid navigation targets and business-first footer copy", () => {

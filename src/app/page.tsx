@@ -1,6 +1,7 @@
 import ContactForm from "@/components/home/ContactForm";
 import { Header } from "@/components/Header";
 import { serviceDefinitions, type ServiceType } from "@/lib/services";
+import Image from "next/image";
 
 const productSteps = [
   {
@@ -316,15 +317,24 @@ export default function Home() {
 
       <footer className="border-t border-[#d8ddd5] bg-[#eef0e9]">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-8 px-6 py-10 sm:px-8 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-lg font-semibold tracking-[-0.02em]">Yard To Table</p>
-            <p className="mt-2 max-w-md text-sm leading-6 text-[#647068]">
-              Yard To Table is a pre-launch lawn-care and garden-services company building a custom
-              platform for property planning, service operations, and long-term care.
-            </p>
-            <p className="mt-1 max-w-md text-xs leading-5 text-[#79837d]">
-              The application also serves as a full-stack software engineering case study.
-            </p>
+          <div className="flex items-center gap-5">
+            <Image
+              src="/yard-to-table-logo.png"
+              alt="Yard To Table original illustrated logo"
+              width={112}
+              height={112}
+              className="h-24 w-24 shrink-0 rounded-xl border border-[#d8ddd5] bg-[#f8f5ec] object-contain p-2 shadow-sm sm:h-28 sm:w-28"
+            />
+            <div>
+              <p className="text-lg font-semibold tracking-[-0.02em]">Yard To Table</p>
+              <p className="mt-2 max-w-md text-sm leading-6 text-[#647068]">
+                Yard To Table is a pre-launch lawn-care and garden-services company building a
+                custom platform for property planning, service operations, and long-term care.
+              </p>
+              <p className="mt-1 max-w-md text-xs leading-5 text-[#79837d]">
+                The application also serves as a full-stack software engineering case study.
+              </p>
+            </div>
           </div>
           <div className="flex flex-col gap-4 text-sm md:items-end">
             <nav aria-label="Footer navigation" className="flex flex-wrap gap-x-6 gap-y-2">
