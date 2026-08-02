@@ -10,6 +10,9 @@ jobs:
   validate:
     name: Validate application
     runs-on: ubuntu-latest
+    env:
+      # Prisma loads its config during postinstall, but this job never connects to a database.
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
 
     steps:
       - name: Check out repository
