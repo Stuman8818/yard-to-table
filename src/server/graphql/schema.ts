@@ -4,6 +4,29 @@ export const typeDefs = `#graphql
     leads: [Lead!]!
   }
 
+  type Mutation {
+    createLead(input: CreateLeadInput!): CreateLeadPayload!
+  }
+
+  input CreateLeadInput {
+    firstName: String!
+    lastName: String!
+    email: String!
+    phone: String!
+    address: String!
+    city: String!
+    state: String!
+    postalCode: String!
+    serviceTypes: [ServiceType!]!
+    message: String!
+  }
+
+  type CreateLeadPayload {
+    success: Boolean!
+    leadId: ID
+    message: String!
+  }
+
   type Health {
     status: String!
     timestamp: String!
@@ -44,9 +67,7 @@ export const typeDefs = `#graphql
   }
 
   enum ServiceType {
-    LAWN_MOWING
-    TRIMMING_EDGING
-    YARD_CLEANUP
+    LAWN_CARE
     GARDEN_CONSULTATION
     GARDEN_DESIGN
     GARDEN_INSTALLATION

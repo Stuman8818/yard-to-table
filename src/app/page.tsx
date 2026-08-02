@@ -2,23 +2,23 @@ import { BenefitCard } from "@/components/home/BenefitCard";
 import { ServiceCard } from "@/components/home/ServiceCard";
 import ContactForm from "@/components/home/ContactForm";
 import { Header } from "@/components/Header";
+import { serviceDefinitions } from "@/lib/services";
 import Image from "next/image";
 
 const services = [
   {
-    title: "Lawn mowing",
-    description:
-      "Keep your grass tidy with reliable mowing that leaves a clean, even finish and healthy curb appeal.",
+    title: serviceDefinitions.LAWN_CARE.label,
+    description: serviceDefinitions.LAWN_CARE.description,
     icon: "🌱",
   },
   {
-    title: "Weed eating & trimming",
+    title: "Included: trimming & edging",
     description:
       "Trim edges and clear hard-to-reach spots around beds, fences, and walkways for a polished yard.",
     icon: "✂️",
   },
   {
-    title: "Driveway, sidewalk, patio blow-off",
+    title: "Included: paved-area cleanup",
     description:
       "Remove grass clippings, leaves, and debris for cleaner outdoor surfaces and a refreshed property.",
     icon: "🍂",

@@ -16,9 +16,7 @@ enum LeadStatus {
 }
 
 enum ServiceType {
-  LAWN_MOWING
-  TRIMMING_EDGING
-  YARD_CLEANUP
+  LAWN_CARE
   GARDEN_CONSULTATION
   GARDEN_DESIGN
   GARDEN_INSTALLATION
@@ -34,9 +32,9 @@ model Lead {
   phone                  String?
   addressLine1           String
   addressLine2           String?
-  city                    String
-  state                   String
-  postalCode              String
+  city                   String
+  state                  String
+  postalCode             String
   preferredContactMethod String?
   status                 LeadStatus @default(NEW)
   notes                  String?
