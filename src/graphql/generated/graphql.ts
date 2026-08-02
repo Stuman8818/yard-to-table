@@ -5,6 +5,19 @@ type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type Incremental<T> =
   T | { [P in keyof T]?: P extends " $fragmentName" | "__typename" ? T[P] : never };
 import { TypedDocumentNode as DocumentNode } from "@graphql-typed-document-node/core";
+export type CreateLeadInput = {
+  address: string;
+  city: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  message: string;
+  phone: string;
+  postalCode: string;
+  serviceTypes: Array<ServiceType>;
+  state: string;
+};
+
 export type LeadStatus =
   "CONSULTATION_SCHEDULED" | "CONTACTED" | "CONVERTED" | "ESTIMATE_SENT" | "LOST" | "NEW";
 
@@ -13,10 +26,16 @@ export type ServiceType =
   | "GARDEN_DESIGN"
   | "GARDEN_INSTALLATION"
   | "GARDEN_MAINTENANCE"
-  | "LAWN_MOWING"
-  | "RAISED_BED_INSTALLATION"
-  | "TRIMMING_EDGING"
-  | "YARD_CLEANUP";
+  | "LAWN_CARE"
+  | "RAISED_BED_INSTALLATION";
+
+export type CreateLeadMutationVariables = Exact<{
+  input: CreateLeadInput;
+}>;
+
+export type CreateLeadMutation = {
+  createLead: { success: boolean; leadId: string | null; message: string };
+};
 
 export type HealthQueryVariables = Exact<{ [key: string]: never }>;
 
@@ -45,6 +64,50 @@ export type LeadsQuery = {
   }>;
 };
 
+export const CreateLeadDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "CreateLead" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "input" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "CreateLeadInput" } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "createLead" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "input" },
+                value: { kind: "Variable", name: { kind: "Name", value: "input" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "success" } },
+                { kind: "Field", name: { kind: "Name", value: "leadId" } },
+                { kind: "Field", name: { kind: "Name", value: "message" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CreateLeadMutation, CreateLeadMutationVariables>;
 export const HealthDocument = {
   kind: "Document",
   definitions: [

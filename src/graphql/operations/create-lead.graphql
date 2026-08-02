@@ -1,0 +1,7 @@
+mutation CreateLead($input: CreateLeadInput!) {
+  createLead(input: $input) {
+    success
+    leadId
+    message
+  }
+}
