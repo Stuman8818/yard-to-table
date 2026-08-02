@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8f3ec;
-  --foreground: #1f2937;
-  --app-font-sans: Arial, Helvetica, sans-serif;
+  --background: #f6f4ed;
+  --foreground: #1e2923;
+  --app-font-sans: "Avenir Next", Avenir, "Segoe UI", Helvetica, Arial, sans-serif;
   --app-font-mono: "Courier New", Courier, monospace;
 }
 
@@ -14,15 +14,89 @@
   --font-mono: var(--app-font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--app-font-sans);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: #c9d9bb;
+  color: #173f32;
+}
+
+button,
+a,
+input,
+textarea {
+  outline-offset: 3px;
+}
+
+.eyebrow {
+  color: #476654;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(to right, transparent, black 45%, black);
+}
+
+.button-primary,
+.button-secondary-dark {
+  display: inline-flex;
+  min-height: 2.875rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.125rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.button-primary {
+  background: #e9efe5;
+  color: #173f32;
+}
+
+.button-primary:hover {
+  background: #ffffff;
+}
+
+.button-secondary-dark {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+}
+
+.button-secondary-dark:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

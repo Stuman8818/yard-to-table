@@ -34,7 +34,7 @@ export function YardImporter() {
   }
 
   return (
-    <section className="relative flex h-full min-h-0 w-full bg-slate-950">
+    <section className="relative flex h-full min-h-0 w-full bg-[#1b2922]">
       {yardImage ? (
         <Image
           src={yardImage}
@@ -46,13 +46,25 @@ export function YardImporter() {
         />
       ) : (
         <div className="flex w-full items-center justify-center px-6">
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            className="rounded-full bg-[#1eb21e] px-8 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-[#168a16] focus:ring-4 focus:ring-white/70 focus:outline-none"
-          >
-            Import Yard
-          </button>
+          <div className="max-w-lg rounded-2xl border border-white/15 bg-white/5 p-8 text-center text-white shadow-2xl sm:p-12">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a8c2ad]">
+              Interactive prototype
+            </p>
+            <h1 className="mt-4 text-3xl font-semibold tracking-[-0.03em]">
+              Start with your space
+            </h1>
+            <p className="mt-3 text-sm leading-6 text-[#bdcbc1]">
+              Import a yard photo to preview the first step of the garden-planning workflow. Your
+              image stays in this browser session.
+            </p>
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="mt-7 rounded-lg bg-[#e8eee5] px-6 py-3 font-semibold text-[#173f32] transition hover:bg-white focus:ring-4 focus:ring-white/30 focus:outline-none"
+            >
+              Import a yard image
+            </button>
+          </div>
         </div>
       )}
 

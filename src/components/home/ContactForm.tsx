@@ -111,7 +111,7 @@ export default function ContactForm() {
       }
 
       setValues(initialValues);
-      setStatus({ ok: true, message: "Your request was submitted. We’ll be in touch soon." });
+      setStatus({ ok: true, message: "Thanks—your interest has been recorded." });
     } catch (error: unknown) {
       const serverFieldErrors = getServerFieldErrors(error);
 
@@ -121,7 +121,7 @@ export default function ContactForm() {
       } else {
         setStatus({
           ok: false,
-          message: "We couldn’t submit your request. Please try again.",
+          message: "We couldn’t record your interest. Please try again.",
         });
       }
     } finally {
@@ -132,15 +132,15 @@ export default function ContactForm() {
   const fieldDescription = (field: Exclude<LeadSubmissionField, "serviceTypes">) =>
     fieldErrors[field] ? `${field}-error` : undefined;
   const inputClassName =
-    "w-full rounded-md border bg-transparent px-3 py-2 font-semibold text-white placeholder:text-white/75 focus:ring-2 focus:ring-white focus:outline-none";
+    "w-full rounded-lg border border-[#cfd8d0] bg-[#fbfcf9] px-3.5 py-2.5 text-[#23332a] placeholder:text-[#89948d] focus:border-[#52725e] focus:ring-2 focus:ring-[#52725e]/15 focus:outline-none";
 
   return (
     <form
       onSubmit={handleSubmit}
       noValidate
-      className="mx-auto max-w-2xl bg-[#8f6641] text-left font-semibold text-white"
+      className="mx-auto max-w-2xl text-left text-sm font-medium text-[#34443b]"
     >
-      <div className="grid gap-4 bg-[#8f6641] sm:grid-cols-2">
+      <div className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
         <Field label="First name" field="firstName" error={fieldErrors.firstName}>
           <input
             id="contact-firstName"
@@ -216,10 +216,10 @@ export default function ContactForm() {
             value={values.state}
             aria-invalid={Boolean(fieldErrors.state)}
             aria-describedby="state-help"
-            className={`${inputClassName} cursor-not-allowed bg-white/15 opacity-80`}
+            className={`${inputClassName} cursor-not-allowed bg-[#edf0ea] text-[#6f7973]`}
           />
-          <p id="state-help" className="mt-1 text-sm font-normal text-white/90">
-            Currently serving Indiana only.
+          <p id="state-help" className="mt-1.5 text-xs font-normal text-[#6e7a72]">
+            Preparing for an initial Indiana launch.
           </p>
         </Field>
 
@@ -255,9 +255,10 @@ export default function ContactForm() {
           className="sm:col-span-2"
           aria-describedby="serviceTypes-description serviceTypes-error"
         >
-          <legend className="mb-2 text-sm">Services needed</legend>
-          <p id="serviceTypes-description" className="mb-3 text-sm text-white/90">
-            Select every service you would like to discuss.
+          <legend className="mb-1 font-semibold text-[#34443b]">Area of interest</legend>
+          <p id="serviceTypes-description" className="mb-3 text-xs font-normal text-[#6e7a72]">
+            Lawn Care is the planned launch service. Other service interests are planned for later
+            phases.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             {(
@@ -268,7 +269,7 @@ export default function ContactForm() {
             ).map(([serviceType, definition]) => (
               <label
                 key={serviceType}
-                className="flex cursor-pointer gap-3 rounded-md border border-white/60 p-3"
+                className={`flex gap-3 rounded-lg border p-3.5 ${definition.enabled ? "cursor-pointer border-[#b9cabb] bg-[#f4f7f1]" : "cursor-not-allowed border-[#e0e4de] bg-[#f7f7f4] text-[#78827c]"}`}
               >
                 <input
                   type="checkbox"
@@ -283,12 +284,12 @@ export default function ContactForm() {
                   <span className="flex items-center gap-2">
                     <span>{definition.label}</span>
                     {!definition.enabled && (
-                      <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">
+                      <span className="rounded-full bg-[#e4e8e1] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#68736c]">
                         Coming soon
                       </span>
                     )}
                   </span>
-                  <span className="mt-1 block text-sm font-normal text-white/90">
+                  <span className="mt-1 block text-xs font-normal leading-5 text-[#68756d]">
                     {definition.description}
                   </span>
                 </span>
@@ -296,7 +297,7 @@ export default function ContactForm() {
             ))}
           </div>
           {fieldErrors.serviceTypes && (
-            <p id="serviceTypes-error" className="mt-1 text-sm text-red-100">
+            <p id="serviceTypes-error" className="mt-1 text-sm text-red-700">
               {fieldErrors.serviceTypes}
             </p>
           )}
@@ -316,19 +317,19 @@ export default function ContactForm() {
         </Field>
       </div>
 
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
         <button
           type="submit"
           disabled={loading}
-          className="inline-flex items-center justify-center rounded-full border-2 border-[#1eb21e] bg-white px-6 py-2 text-base font-semibold text-black transition hover:bg-[#8f6641] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#214d3c] px-5 py-2.5 font-semibold text-white transition-colors hover:bg-[#173f32] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loading ? "Submitting…" : "Send Request"}
+          {loading ? "Submitting…" : "Join the early interest list"}
         </button>
         {status && (
           <p
             role={status.ok ? "status" : "alert"}
             aria-live={status.ok ? "polite" : "assertive"}
-            className={`rounded-md bg-white px-3 py-2 text-sm ${status.ok ? "text-green-800" : "text-red-700"}`}
+            className={`rounded-md px-3 py-2 text-sm ${status.ok ? "bg-[#e8f1e6] text-[#28543c]" : "bg-red-50 text-red-700"}`}
           >
             {status.message}
           </p>
@@ -353,12 +354,12 @@ function Field({
 }) {
   return (
     <div className={wide ? "sm:col-span-2" : undefined}>
-      <label htmlFor={`contact-${field}`} className="mb-1 block text-sm">
+      <label htmlFor={`contact-${field}`} className="mb-1.5 block font-semibold text-[#34443b]">
         {label}
       </label>
       {children}
       {error && (
-        <p id={`${field}-error`} className="mt-1 text-sm text-red-100">
+        <p id={`${field}-error`} className="mt-1 text-sm text-red-700">
           {error}
         </p>
       )}
