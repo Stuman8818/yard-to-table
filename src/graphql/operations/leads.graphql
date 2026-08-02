@@ -1,0 +1,24 @@
+query Leads {
+  leads {
+    id
+    firstName
+    lastName
+    email
+    phone
+    addressLine1
+    addressLine2
+    city
+    state
+    postalCode
+    preferredContactMethod
+    status
+    notes
+    createdAt
+    updatedAt
+    requestedServices {
+      id
+      leadId
+      serviceType
+    }
+  }
+}
