@@ -47,6 +47,8 @@ describe("homepage positioning", () => {
         "Concept preview of the internal Yard To Table property-planning system",
       ),
     ).toBeInTheDocument();
+    expect(screen.getByLabelText("Yard To Table brand mark")).toBeInTheDocument();
+    expect(screen.getByText("Powered by the Yard To Table operating platform")).toBeInTheDocument();
   });
 
   it("uses valid navigation targets and business-first footer copy", () => {

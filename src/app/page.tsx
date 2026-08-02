@@ -397,6 +397,7 @@ function ProductPreview() {
     <div
       className="relative mx-auto w-full max-w-[540px]"
       aria-label="Concept preview of the internal Yard To Table property-planning system"
+      role="img"
     >
       <div className="absolute -inset-6 rounded-[2rem] bg-[#82a489]/10 blur-2xl" />
       <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-[#f7f6ef] p-3 shadow-[0_32px_80px_rgba(7,27,20,0.35)] sm:p-4">
@@ -412,33 +413,115 @@ function ProductPreview() {
         </div>
         <div className="grid gap-3 pt-3 sm:grid-cols-[1.25fr_0.75fr]">
           <div className="relative min-h-72 overflow-hidden rounded-xl bg-[#dce8d7] p-5 sm:min-h-96">
-            <div className="absolute inset-x-0 top-0 h-28 bg-[#c9ddcc]" />
             <svg
               aria-hidden="true"
-              viewBox="0 0 320 300"
+              viewBox="0 0 320 360"
               className="absolute inset-0 h-full w-full"
             >
-              <path d="M0 240 96 128l85 48 139-95v219H0Z" fill="#b8c9a7" />
-              <path d="m0 265 106-112 70 48L320 111v189H0Z" fill="#8fab82" />
-              <path d="m38 300 78-123 60 39 66-43 78 56v71Z" fill="#6f946e" />
-              <path d="M133 178 228 300h-66L98 198Z" fill="#ede5cf" opacity=".9" />
-              <rect x="34" y="126" width="92" height="70" rx="4" fill="#f7f1df" />
-              <path d="m25 134 55-43 56 43" fill="#b56f51" />
-              <rect x="70" y="158" width="24" height="38" fill="#8d684d" />
+              <defs>
+                <pattern id="plan-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <path
+                    d="M20 0H0v20"
+                    fill="none"
+                    stroke="#78957e"
+                    strokeWidth=".5"
+                    opacity=".28"
+                  />
+                </pattern>
+              </defs>
+              <rect width="320" height="360" fill="#dfe9dc" />
+              <rect width="320" height="360" fill="url(#plan-grid)" />
+              <rect
+                x="20"
+                y="18"
+                width="280"
+                height="324"
+                rx="8"
+                fill="#c8dbc3"
+                stroke="#5f8067"
+                strokeDasharray="5 4"
+              />
+              <path d="M32 154h256v176H32z" fill="#93b287" opacity=".92" />
+              <path
+                d="M167 142c0 58-15 89-43 122s-42 59-42 66"
+                fill="none"
+                stroke="#eee7d5"
+                strokeWidth="25"
+              />
+              <path
+                d="M167 142c0 58-15 89-43 122s-42 59-42 66"
+                fill="none"
+                stroke="#c8bda3"
+                strokeWidth="1.5"
+                strokeDasharray="4 5"
+              />
+              <rect x="45" y="39" width="123" height="90" rx="4" fill="#f2ecdc" stroke="#8f8978" />
+              <rect x="62" y="56" width="47" height="31" rx="2" fill="#d7c8ae" />
+              <rect x="114" y="56" width="37" height="58" rx="2" fill="#d7c8ae" />
+              <text x="57" y="105" fill="#6c685e" fontSize="9" fontWeight="600">
+                RESIDENCE
+              </text>
+              <g fill="#8f6641" stroke="#6f4e34">
+                <rect x="195" y="55" width="70" height="22" rx="3" />
+                <rect x="195" y="84" width="70" height="22" rx="3" />
+                <rect x="195" y="113" width="70" height="22" rx="3" />
+              </g>
+              <g stroke="#d9c493" strokeWidth="1" opacity=".8">
+                <path d="M205 59v14m12-14v14m12-14v14m12-14v14m12-14v14" />
+                <path d="M205 88v14m12-14v14m12-14v14m12-14v14m12-14v14" />
+                <path d="M205 117v14m12-14v14m12-14v14m12-14v14m12-14v14" />
+              </g>
+              <text x="198" y="150" fill="#48634e" fontSize="9" fontWeight="600">
+                GARDEN BEDS
+              </text>
+              <path d="M38 199h79v52H38z" fill="#789d72" stroke="#54755a" strokeDasharray="3 3" />
+              <text x="49" y="228" fill="#eef4e9" fontSize="9" fontWeight="600">
+                LAWN ZONE A
+              </text>
+              <path
+                d="M176 180h102v120H176z"
+                fill="#83a878"
+                stroke="#54755a"
+                strokeDasharray="3 3"
+              />
+              <text x="196" y="243" fill="#eef4e9" fontSize="9" fontWeight="600">
+                LAWN ZONE B
+              </text>
+              <circle cx="55" cy="294" r="28" fill="#66896b" opacity=".9" />
+              <circle cx="274" cy="301" r="22" fill="#66896b" opacity=".85" />
+              <text x="38" y="335" fill="#4c6752" fontSize="8" fontWeight="600">
+                AFTERNOON SHADE
+              </text>
+              <g fill="#f8faf5" stroke="#315a43" strokeWidth="2">
+                <circle cx="168" cy="146" r="10" />
+                <circle cx="190" cy="208" r="10" />
+                <circle cx="121" cy="286" r="10" />
+              </g>
+              <g fill="#315a43" fontSize="9" fontWeight="700" textAnchor="middle">
+                <text x="168" y="149">
+                  1
+                </text>
+                <text x="190" y="211">
+                  2
+                </text>
+                <text x="121" y="289">
+                  3
+                </text>
+              </g>
             </svg>
             <div className="absolute bottom-4 left-4 rounded-lg bg-white/90 px-3 py-2 shadow-sm">
               <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#6d796f]">
-                North yard
+                Property overview
               </p>
-              <p className="mt-0.5 text-xs font-semibold text-[#263e32]">3 planning zones</p>
+              <p className="mt-0.5 text-xs font-semibold text-[#263e32]">3 plan markers</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-1">
             {[
-              ["Sun exposure", "6–8 hours"],
-              ["Lawn plan", "Concept ready"],
-              ["Garden zone", "Raised beds"],
-              ["Next review", "Spring"],
+              ["Property", "4 mapped zones"],
+              ["Lawn care", "Launch workflow"],
+              ["Garden plan", "3 raised beds"],
+              ["Site notes", "Access mapped"],
             ].map(([label, value], index) => (
               <div key={label} className="rounded-xl border border-[#dfe4db] bg-white p-3.5">
                 <div className="flex items-center justify-between">
