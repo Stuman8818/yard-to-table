@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  CONSULTATION_SCHEDULED
+  ESTIMATE_SENT
+  CONVERTED
+  LOST
+}
+
+enum ServiceType {
+  LAWN_MOWING
+  TRIMMING_EDGING
+  YARD_CLEANUP
+  GARDEN_CONSULTATION
+  GARDEN_DESIGN
+  GARDEN_INSTALLATION
+  RAISED_BED_INSTALLATION
+  GARDEN_MAINTENANCE
+}
+
+model Lead {
+  id                     String     @id @default(cuid())
+  firstName              String
+  lastName               String
+  email                  String
+  phone                  String?
+  addressLine1           String
+  addressLine2           String?
+  city                    String
+  state                   String
+  postalCode              String
+  preferredContactMethod String?
+  status                 LeadStatus @default(NEW)
+  notes                  String?
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+
+  requestedServices LeadService[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([email])
+}
+
+model LeadService {
+  id          String      @id @default(cuid())
+  leadId      String
+  serviceType ServiceType
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([leadId, serviceType])
+  @@index([leadId])
+}
