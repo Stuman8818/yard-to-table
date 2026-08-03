@@ -50,6 +50,7 @@ model Lead {
   organizationId         String
 
   organization      Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  internalNotes     LeadNote[]
   requestedServices LeadService[]
 
   @@index([organizationId])
@@ -67,6 +68,7 @@ model Organization {
 
   leads       Lead[]
   memberships OrganizationMembership[]
+  leadNotes   LeadNote[]
 }
 
 model User {
@@ -78,6 +80,7 @@ model User {
   updatedAt    DateTime @updatedAt
 
   memberships OrganizationMembership[]
+  leadNotes   LeadNote[]
 }
 
 model OrganizationMembership {
@@ -105,4 +108,21 @@ model LeadService {
 
   @@unique([leadId, serviceType])
   @@index([leadId])
+}
+
+model LeadNote {
+  id           String   @id @default(cuid())
+  leadId       String
+  authorUserId String
+  content      String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  lead           Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  author         User          @relation(fields: [authorUserId], references: [id], onDelete: Restrict)
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+
+  @@index([leadId, createdAt])
+  @@index([authorUserId])
 }

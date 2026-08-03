@@ -2,7 +2,12 @@ import type { OrganizationRole } from "@prisma/client";
 
 import { verifyPassword } from "./password";
 
-export const ADMIN_LEAD_ROLES = ["OWNER", "ADMIN"] as const satisfies readonly OrganizationRole[];
+export const LEAD_VIEW_ROLES = [
+  "OWNER",
+  "ADMIN",
+  "MANAGER",
+] as const satisfies readonly OrganizationRole[];
+export const LEAD_EDIT_ROLES = ["OWNER", "ADMIN"] as const satisfies readonly OrganizationRole[];
 
 interface CredentialUserRepository {
   findUnique(args: {
@@ -105,4 +110,8 @@ export function requireAllowedRole(
   }
 
   return membership;
+}
+
+export function canEditLeads(role: OrganizationRole): boolean {
+  return LEAD_EDIT_ROLES.some((allowedRole) => allowedRole === role);
 }

@@ -1,11 +1,14 @@
 export const typeDefs = `#graphql
   type Query {
     health: Health!
-    leads: [Lead!]!
+    leads(search: String, status: LeadStatus, sort: LeadSort = NEWEST): [Lead!]!
+    lead(id: ID!): Lead
   }
 
   type Mutation {
     createLead(input: CreateLeadInput!): CreateLeadPayload!
+    updateLeadStatus(leadId: ID!, status: LeadStatus!): Lead!
+    addLeadNote(leadId: ID!, content: String!): LeadNote!
   }
 
   input CreateLeadInput {
@@ -49,6 +52,20 @@ export const typeDefs = `#graphql
     createdAt: String!
     updatedAt: String!
     requestedServices: [LeadService!]!
+    internalNotes: [LeadNote!]!
+  }
+
+  type LeadNote {
+    id: ID!
+    content: String!
+    createdAt: String!
+    updatedAt: String!
+    author: LeadNoteAuthor!
+  }
+
+  type LeadNoteAuthor {
+    name: String
+    email: String!
   }
 
   type LeadService {
@@ -64,6 +81,11 @@ export const typeDefs = `#graphql
     ESTIMATE_SENT
     CONVERTED
     LOST
+  }
+
+  enum LeadSort {
+    NEWEST
+    OLDEST
   }
 
   enum ServiceType {

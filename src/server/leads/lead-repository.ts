@@ -1,13 +1,76 @@
-import type { PrismaClient } from "@prisma/client";
+import type { LeadStatus, PrismaClient } from "@prisma/client";
 
-export function findLeadsForOrganization(prisma: PrismaClient, organizationId: string) {
+import type { LeadListFilters } from "@/lib/validation/lead-management";
+
+export function findLeadsForOrganization(
+  prisma: PrismaClient,
+  organizationId: string,
+  filters: LeadListFilters = { sort: "newest" },
+) {
+  const search = filters.search?.trim();
   return prisma.lead.findMany({
-    where: { organizationId },
+    where: {
+      organizationId,
+      ...(filters.status ? { status: filters.status } : {}),
+      ...(search
+        ? {
+            OR: ["firstName", "lastName", "email", "phone"].map((field) => ({
+              [field]: { contains: search, mode: "insensitive" as const },
+            })),
+          }
+        : {}),
+    },
+    include: { requestedServices: true },
+    orderBy: { createdAt: filters.sort === "oldest" ? "asc" : "desc" },
+  });
+}
+
+export function findLeadForOrganization(
+  prisma: PrismaClient,
+  organizationId: string,
+  leadId: string,
+) {
+  return prisma.lead.findFirst({
+    where: { id: leadId, organizationId },
     include: {
       requestedServices: true,
+      internalNotes: {
+        include: { author: { select: { name: true, email: true } } },
+        orderBy: { createdAt: "desc" },
+      },
     },
-    orderBy: {
-      createdAt: "desc" as const,
-    },
+  });
+}
+
+export async function updateLeadStatusForOrganization(
+  prisma: PrismaClient,
+  organizationId: string,
+  leadId: string,
+  status: LeadStatus,
+) {
+  const result = await prisma.lead.updateMany({
+    where: { id: leadId, organizationId },
+    data: { status },
+  });
+  if (result.count !== 1) return null;
+  return findLeadForOrganization(prisma, organizationId, leadId);
+}
+
+export async function addLeadNoteForOrganization(
+  prisma: PrismaClient,
+  organizationId: string,
+  leadId: string,
+  authorUserId: string,
+  content: string,
+) {
+  const lead = await prisma.lead.findFirst({
+    where: { id: leadId, organizationId },
+    select: { id: true },
+  });
+  if (!lead) return null;
+
+  return prisma.leadNote.create({
+    data: { leadId: lead.id, authorUserId, content },
+    include: { author: { select: { name: true, email: true } } },
   });
 }
