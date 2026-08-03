@@ -2,9 +2,12 @@
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import {
   AddLeadNoteDocument,
+  ConvertLeadToCustomerDocument,
   LeadDetailsDocument,
   UpdateLeadStatusDocument,
   type LeadStatus,
@@ -20,14 +23,17 @@ const leadStatuses = [
 ] as const satisfies readonly LeadStatus[];
 
 export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: boolean }) {
+  const router = useRouter();
   const { data, loading, error, refetch } = useQuery(LeadDetailsDocument, {
     variables: { id: leadId },
     ssr: false,
   });
   const [updateStatus, statusResult] = useMutation(UpdateLeadStatusDocument);
   const [addNote, noteResult] = useMutation(AddLeadNoteDocument);
+  const [convertLead, convertResult] = useMutation(ConvertLeadToCustomerDocument);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [noteMessage, setNoteMessage] = useState<string | null>(null);
+  const [conversionMessage, setConversionMessage] = useState<string | null>(null);
 
   if (loading) return <p className="py-12 text-center">Loading lead</p>;
   if (error || !data?.lead)
@@ -75,6 +81,18 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
       setNoteMessage("Note added.");
     } catch {
       setNoteMessage("Note could not be added.");
+    }
+  }
+
+  async function submitConversion() {
+    setConversionMessage(null);
+    try {
+      const result = await convertLead({ variables: { leadId } });
+      const customerId = result.data?.convertLeadToCustomer.id;
+      if (!customerId) throw new Error("Customer was not returned.");
+      router.push(`/admin/customers/${customerId}`);
+    } catch {
+      setConversionMessage("This lead could not be converted. Please try again.");
     }
   }
 
@@ -166,7 +184,39 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
           </div>
         </section>
       </div>
-      <aside>
+      <aside className="space-y-6">
+        {lead.convertedCustomer ? (
+          <div className="rounded-xl border border-[#b7d36b] bg-white p-6">
+            <h2 className="font-semibold text-[#173f32]">Customer created</h2>
+            <Link
+              href={`/admin/customers/${lead.convertedCustomer.id}`}
+              className="mt-3 inline-block font-semibold text-[#476654] hover:underline"
+            >
+              View customer record
+            </Link>
+          </div>
+        ) : canEdit ? (
+          <form
+            action={submitConversion}
+            className="rounded-xl border border-[#b7d36b] bg-white p-6"
+          >
+            <h2 className="font-semibold text-[#173f32]">Qualified lead?</h2>
+            <p className="mt-2 text-sm text-[#5b685f]">
+              Create a customer and their first property from this lead.
+            </p>
+            <button
+              disabled={convertResult.loading}
+              className="mt-4 w-full rounded-lg bg-[#476654] px-4 py-2 font-semibold text-white disabled:opacity-60"
+            >
+              {convertResult.loading ? "Converting…" : "Convert to Customer"}
+            </button>
+            {conversionMessage ? (
+              <p role="alert" className="mt-2 text-sm">
+                {conversionMessage}
+              </p>
+            ) : null}
+          </form>
+        ) : null}
         {canEdit ? (
           <form action={submitStatus} className="rounded-xl border border-[#d8ddd4] bg-white p-6">
             <label htmlFor="lead-status" className="block font-semibold">

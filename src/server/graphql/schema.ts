@@ -3,12 +3,14 @@ export const typeDefs = `#graphql
     health: Health!
     leads(search: String, status: LeadStatus, sort: LeadSort = NEWEST): [Lead!]!
     lead(id: ID!): Lead
+    customer(id: ID!): Customer
   }
 
   type Mutation {
     createLead(input: CreateLeadInput!): CreateLeadPayload!
     updateLeadStatus(leadId: ID!, status: LeadStatus!): Lead!
     addLeadNote(leadId: ID!, content: String!): LeadNote!
+    convertLeadToCustomer(leadId: ID!): Customer!
   }
 
   input CreateLeadInput {
@@ -53,6 +55,35 @@ export const typeDefs = `#graphql
     updatedAt: String!
     requestedServices: [LeadService!]!
     internalNotes: [LeadNote!]!
+    convertedCustomer: Customer
+  }
+
+  type Customer {
+    id: ID!
+    firstName: String!
+    lastName: String!
+    email: String!
+    phone: String
+    createdAt: String!
+    updatedAt: String!
+    organization: CustomerOrganization!
+    sourceLead: CustomerSourceLead
+    properties: [Property!]!
+  }
+
+  type CustomerOrganization { name: String! }
+  type CustomerSourceLead { id: ID! }
+
+  type Property {
+    id: ID!
+    addressLine1: String!
+    addressLine2: String
+    city: String!
+    state: String!
+    postalCode: String!
+    accessNotes: String
+    createdAt: String!
+    updatedAt: String!
   }
 
   type LeadNote {
