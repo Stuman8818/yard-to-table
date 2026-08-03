@@ -13,6 +13,7 @@ import { findCustomerForOrganization } from "@/server/customers/customer-reposit
 import {
   convertLeadToCustomer,
   LeadAlreadyConvertedWithoutCustomerError,
+  undoLeadConversion,
 } from "@/server/customers/lead-conversion";
 import {
   addLeadNoteForOrganization,
@@ -184,6 +185,26 @@ export const resolvers = {
         }
         throw error;
       }
+    },
+    undoLeadConversion: async (
+      _parent: unknown,
+      args: { leadId: string },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireLeadEditAccess(context);
+      const parsed = convertLeadSchema.safeParse(args);
+      if (!parsed.success) {
+        throw new GraphQLError("Choose a valid lead.", { extensions: { code: "BAD_USER_INPUT" } });
+      }
+      const lead = await undoLeadConversion(
+        context.prisma,
+        membership.organizationId,
+        parsed.data.leadId,
+      );
+      if (!lead) {
+        throw new GraphQLError("Converted lead not found.", { extensions: { code: "NOT_FOUND" } });
+      }
+      return lead;
     },
   },
   Lead: {

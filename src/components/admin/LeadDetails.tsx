@@ -9,6 +9,7 @@ import {
   AddLeadNoteDocument,
   ConvertLeadToCustomerDocument,
   LeadDetailsDocument,
+  UndoLeadConversionDocument,
   UpdateLeadStatusDocument,
   type LeadStatus,
 } from "@/graphql/generated/graphql";
@@ -18,7 +19,6 @@ const leadStatuses = [
   "CONTACTED",
   "CONSULTATION_SCHEDULED",
   "ESTIMATE_SENT",
-  "CONVERTED",
   "LOST",
 ] as const satisfies readonly LeadStatus[];
 
@@ -32,6 +32,7 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
   const [updateStatus, statusResult] = useMutation(UpdateLeadStatusDocument);
   const [addNote, noteResult] = useMutation(AddLeadNoteDocument);
   const [convertLead, convertResult] = useMutation(ConvertLeadToCustomerDocument);
+  const [undoConversion, undoResult] = useMutation(UndoLeadConversionDocument);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [noteMessage, setNoteMessage] = useState<string | null>(null);
   const [conversionMessage, setConversionMessage] = useState<string | null>(null);
@@ -95,6 +96,24 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
       router.push(`/admin/customers/${customerId}`);
     } catch {
       setConversionMessage("This lead could not be converted. Please try again.");
+    }
+  }
+
+  async function submitUndoConversion() {
+    if (
+      !window.confirm(
+        "Undo this conversion? The customer and property created from this lead will be deleted.",
+      )
+    ) {
+      return;
+    }
+    setConversionMessage(null);
+    try {
+      await undoConversion({ variables: { leadId } });
+      await refetch();
+      setConversionMessage("Conversion undone.");
+    } catch {
+      setConversionMessage("The conversion could not be undone.");
     }
   }
 
@@ -189,7 +208,36 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
       <aside className="space-y-6">
         {lead.convertedCustomer ? (
           <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-6">
-            <h2 className="font-semibold text-emerald-950">Customer converted</h2>
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="font-semibold text-emerald-950">Customer converted</h2>
+              {canEdit ? (
+                <form action={submitUndoConversion}>
+                  <button
+                    type="submit"
+                    disabled={undoResult.loading}
+                    aria-label="Undo customer conversion"
+                    title="Undo customer conversion"
+                    className="inline-flex size-9 items-center justify-center rounded-full border border-emerald-700 text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-50"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="size-5"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 7 4 12l5 5" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 12h9a5 5 0 0 1 5 5"
+                      />
+                    </svg>
+                  </button>
+                </form>
+              ) : null}
+            </div>
             <p className="mt-2 text-sm text-emerald-800">
               This lead now has a customer and property record.
             </p>
@@ -222,7 +270,7 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
             ) : null}
           </form>
         ) : null}
-        {canEdit ? (
+        {canEdit && lead.status !== "CONVERTED" ? (
           <form action={submitStatus} className="rounded-xl border border-[#d8ddd4] bg-white p-6">
             <label htmlFor="lead-status" className="block font-semibold">
               Lead status
@@ -251,6 +299,10 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
               </p>
             ) : null}
           </form>
+        ) : lead.status === "CONVERTED" ? (
+          <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-6 text-sm text-emerald-900">
+            Converted status is managed by the customer conversion workflow.
+          </div>
         ) : (
           <div className="rounded-xl border border-[#d8ddd4] bg-white p-6 text-sm text-[#5b685f]">
             Managers have read-only access.

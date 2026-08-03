@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { convertLeadToCustomer } from "./lead-conversion";
+import { convertLeadToCustomer, undoLeadConversion } from "./lead-conversion";
 
 const lead = {
   id: "lead-1",
@@ -26,7 +26,8 @@ function prismaMock(overrides?: { foundLead?: unknown; createError?: Error }) {
     ? vi.fn().mockRejectedValue(overrides.createError)
     : vi.fn().mockResolvedValue({ id: "customer-1", properties: [{ id: "property-1" }] });
   const update = vi.fn().mockResolvedValue({ id: "lead-1", status: "CONVERTED" });
-  const tx = { lead: { findFirst, update }, customer: { create } };
+  const deleteMany = vi.fn().mockResolvedValue({ count: 1 });
+  const tx = { lead: { findFirst, update }, customer: { create, deleteMany } };
   return {
     prisma: {
       $transaction: vi.fn(async (operation: (client: typeof tx) => unknown) => operation(tx)),
@@ -35,6 +36,7 @@ function prismaMock(overrides?: { foundLead?: unknown; createError?: Error }) {
     findFirst,
     create,
     update,
+    deleteMany,
   };
 }
 
@@ -66,8 +68,32 @@ describe("lead conversion", () => {
     );
     expect(mock.update).toHaveBeenCalledWith({
       where: { id: "lead-1" },
-      data: { status: "CONVERTED" },
+      data: { status: "CONVERTED", statusBeforeConversion: "CONTACTED" },
     });
+  });
+
+  it("undoes conversion in one transaction and restores the previous status", async () => {
+    const mock = prismaMock({
+      foundLead: {
+        id: "lead-1",
+        statusBeforeConversion: "ESTIMATE_SENT",
+        convertedCustomer: { id: "customer-1" },
+      },
+    });
+    await undoLeadConversion(mock.prisma as never, "organization-1", "lead-1");
+    expect(mock.deleteMany).toHaveBeenCalledWith({
+      where: {
+        id: "customer-1",
+        sourceLeadId: "lead-1",
+        organizationId: "organization-1",
+      },
+    });
+    expect(mock.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "lead-1" },
+        data: { status: "ESTIMATE_SENT", statusBeforeConversion: null },
+      }),
+    );
   });
 
   it("does not convert a lead outside the authenticated organization", async () => {

@@ -11,6 +11,7 @@ export const typeDefs = `#graphql
     updateLeadStatus(leadId: ID!, status: LeadStatus!): Lead!
     addLeadNote(leadId: ID!, content: String!): LeadNote!
     convertLeadToCustomer(leadId: ID!): Customer!
+    undoLeadConversion(leadId: ID!): Lead!
   }
 
   input CreateLeadInput {

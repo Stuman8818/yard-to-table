@@ -32,7 +32,7 @@ enum OrganizationRole {
 }
 
 model Lead {
-  id                     String     @id @default(cuid())
+  id                     String      @id @default(cuid())
   firstName              String
   lastName               String
   email                  String
@@ -43,10 +43,11 @@ model Lead {
   state                  String
   postalCode             String
   preferredContactMethod String?
-  status                 LeadStatus @default(NEW)
+  status                 LeadStatus  @default(NEW)
+  statusBeforeConversion LeadStatus?
   notes                  String?
-  createdAt              DateTime   @default(now())
-  updatedAt              DateTime   @updatedAt
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
   organizationId         String
 
   organization      Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)

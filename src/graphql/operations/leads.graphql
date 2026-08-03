@@ -57,6 +57,17 @@ mutation ConvertLeadToCustomer($leadId: ID!) {
   }
 }
 
+mutation UndoLeadConversion($leadId: ID!) {
+  undoLeadConversion(leadId: $leadId) {
+    id
+    status
+    updatedAt
+    convertedCustomer {
+      id
+    }
+  }
+}
+
 mutation UpdateLeadStatus($leadId: ID!, $status: LeadStatus!) {
   updateLeadStatus(leadId: $leadId, status: $status) {
     id

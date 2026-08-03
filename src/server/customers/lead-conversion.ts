@@ -49,7 +49,10 @@ export async function convertLeadToCustomer(
         include: customerInclude,
       });
 
-      await tx.lead.update({ where: { id: lead.id }, data: { status: LeadStatus.CONVERTED } });
+      await tx.lead.update({
+        where: { id: lead.id },
+        data: { status: LeadStatus.CONVERTED, statusBeforeConversion: lead.status },
+      });
       return customer;
     });
   } catch (error: unknown) {
@@ -62,4 +65,47 @@ export async function convertLeadToCustomer(
     }
     throw error;
   }
+}
+
+export async function undoLeadConversion(
+  prisma: PrismaClient,
+  organizationId: string,
+  leadId: string,
+) {
+  return prisma.$transaction(async (tx) => {
+    const lead = await tx.lead.findFirst({
+      where: { id: leadId, organizationId },
+      select: {
+        id: true,
+        statusBeforeConversion: true,
+        convertedCustomer: { select: { id: true } },
+      },
+    });
+    if (!lead?.convertedCustomer) return null;
+
+    const deleted = await tx.customer.deleteMany({
+      where: {
+        id: lead.convertedCustomer.id,
+        sourceLeadId: lead.id,
+        organizationId,
+      },
+    });
+    if (deleted.count !== 1) return null;
+
+    return tx.lead.update({
+      where: { id: lead.id },
+      data: {
+        status: lead.statusBeforeConversion ?? LeadStatus.CONTACTED,
+        statusBeforeConversion: null,
+      },
+      include: {
+        requestedServices: true,
+        convertedCustomer: { select: { id: true } },
+        internalNotes: {
+          include: { author: { select: { name: true, email: true } } },
+          orderBy: { createdAt: "desc" },
+        },
+      },
+    });
+  });
 }
