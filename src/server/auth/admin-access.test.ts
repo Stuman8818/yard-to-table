@@ -32,7 +32,7 @@ describe("admin route authorization", () => {
     ).rejects.toBeInstanceOf(OrganizationAccessError);
   });
 
-  it.each(["OWNER", "ADMIN"] as const)("allows an authenticated %s", async (role) => {
+  it.each(["OWNER", "ADMIN", "MANAGER"] as const)("allows an authenticated %s", async (role) => {
     await expect(
       authorizeAdminSession(
         { user: { id: "user-1", email: "admin@example.com" } },

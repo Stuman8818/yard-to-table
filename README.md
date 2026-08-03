@@ -111,6 +111,16 @@ SEED_ADMIN_NAME=<optional display name>
 
 This phase does not include public registration, invitations, organization switching, password reset, full lead management, customer accounts, or crew-facing workflows.
 
+### Lead management
+
+The authenticated admin application provides tenant-scoped lead listing and details. List searches match first name, last name, email, or phone case-insensitively; status filtering uses `LeadStatus`; and results may be ordered newest or oldest. All filtering happens in PostgreSQL after the authenticated organization constraint is applied.
+
+Lead details are retrieved with both the requested lead ID and the organization ID resolved from the authenticated membership. Cross-organization IDs therefore return the same safe not-found result as unknown IDs. Status mutations use a tenant-scoped `updateMany`, and internal notes verify the scoped parent lead before recording the authenticated user as author. The public submission message remains in `Lead.notes`; internal history is stored separately in `LeadNote` and cannot be edited or deleted in this phase.
+
+`OWNER` and `ADMIN` memberships can view and modify leads. `MANAGER` memberships have read-only lead access, while `CREW` memberships are denied. Client requests never supply organization IDs, user IDs, membership IDs, or roles.
+
+Current limitations include no lead conversion, customers, properties, scheduling, estimates, jobs, invoices, note editing/deletion, pagination, or bulk actions.
+
 ## Project Structure
 
 ```text

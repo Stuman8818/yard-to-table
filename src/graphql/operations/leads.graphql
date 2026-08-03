@@ -1,5 +1,22 @@
-query Leads {
-  leads {
+query Leads($search: String, $status: LeadStatus, $sort: LeadSort) {
+  leads(search: $search, status: $status, sort: $sort) {
+    id
+    firstName
+    lastName
+    email
+    phone
+    status
+    createdAt
+    requestedServices {
+      id
+      leadId
+      serviceType
+    }
+  }
+}
+
+query LeadDetails($id: ID!) {
+  lead(id: $id) {
     id
     firstName
     lastName
@@ -10,15 +27,44 @@ query Leads {
     city
     state
     postalCode
-    preferredContactMethod
     status
     notes
     createdAt
     updatedAt
     requestedServices {
       id
-      leadId
       serviceType
+    }
+    internalNotes {
+      id
+      content
+      createdAt
+      updatedAt
+      author {
+        name
+        email
+      }
+    }
+  }
+}
+
+mutation UpdateLeadStatus($leadId: ID!, $status: LeadStatus!) {
+  updateLeadStatus(leadId: $leadId, status: $status) {
+    id
+    status
+    updatedAt
+  }
+}
+
+mutation AddLeadNote($leadId: ID!, $content: String!) {
+  addLeadNote(leadId: $leadId, content: $content) {
+    id
+    content
+    createdAt
+    updatedAt
+    author {
+      name
+      email
     }
   }
 }

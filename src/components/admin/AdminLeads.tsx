@@ -1,25 +1,48 @@
 "use client";
 
 import { useQuery } from "@apollo/client/react";
+import Link from "next/link";
 
-import { LeadsDocument } from "@/graphql/generated/graphql";
+import { LeadsDocument, type LeadStatus } from "@/graphql/generated/graphql";
 
-export function AdminLeads() {
-  const { data, loading, error } = useQuery(LeadsDocument, { ssr: false });
+const leadStatuses = [
+  "NEW",
+  "CONTACTED",
+  "CONSULTATION_SCHEDULED",
+  "ESTIMATE_SENT",
+  "CONVERTED",
+  "LOST",
+] as const satisfies readonly LeadStatus[];
+
+interface AdminLeadsProps {
+  search?: string;
+  status?: string;
+  sort: "newest" | "oldest";
+}
+
+export function AdminLeads({ search, status, sort }: AdminLeadsProps) {
+  const validStatus = leadStatuses.find((value) => value === status);
+  const { data, dataState, loading, error } = useQuery(LeadsDocument, {
+    ssr: false,
+    variables: {
+      search: search || undefined,
+      status: validStatus,
+      sort: sort === "oldest" ? "OLDEST" : "NEWEST",
+    },
+  });
 
   if (loading) return <p className="py-12 text-center text-[#5b685f]">Loading leadsâ€¦</p>;
-  if (error) {
+  if (error)
     return (
       <p role="alert" className="rounded-xl bg-[#fbe8e4] p-5 text-[#7d2d22]">
         Leads could not be loaded. Please try again.
       </p>
     );
-  }
-  if (!data?.leads.length) {
+  if (dataState !== "complete" || !data?.leads.length) {
     return (
       <div className="rounded-xl border border-dashed border-[#b8c5bb] bg-white p-10 text-center">
-        <h2 className="font-semibold text-[#173f32]">No leads yet</h2>
-        <p className="mt-2 text-sm text-[#5b685f]">New service requests will appear here.</p>
+        <h2 className="font-semibold text-[#173f32]">No matching leads</h2>
+        <p className="mt-2 text-sm text-[#5b685f]">Try clearing the current search or filters.</p>
       </div>
     );
   }
@@ -38,9 +61,11 @@ export function AdminLeads() {
         </thead>
         <tbody className="divide-y divide-[#e5e9e2]">
           {data.leads.map((lead) => (
-            <tr key={lead.id}>
-              <td className="whitespace-nowrap px-5 py-4 font-semibold text-[#173f32]">
-                {lead.firstName} {lead.lastName}
+            <tr key={lead.id} className="hover:bg-[#fafbf8]">
+              <td className="whitespace-nowrap px-5 py-4 font-semibold">
+                <Link href={`/admin/leads/${lead.id}`} className="text-[#173f32] hover:underline">
+                  {lead.firstName} {lead.lastName}
+                </Link>
               </td>
               <td className="px-5 py-4 text-[#4c5c52]">
                 <a href={`mailto:${lead.email}`} className="block hover:underline">

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { GraphQLContext } from "./context";
-import { requireAdminLeadAccess } from "./authorization";
+import { requireAdminLeadAccess, requireLeadEditAccess } from "./authorization";
 
 function context(overrides: Partial<GraphQLContext>): GraphQLContext {
   return {
@@ -48,5 +48,21 @@ describe("GraphQL lead authorization", () => {
         }),
       ),
     ).toMatchObject({ organizationId: "organization-1" });
+  });
+
+  it("allows managers to view but not modify leads", () => {
+    const manager = context({
+      authenticatedUserId: "user-1",
+      membership: {
+        membershipId: "membership-1",
+        organizationId: "organization-1",
+        organizationName: "Yard To Table",
+        role: "MANAGER",
+      },
+    });
+    expect(requireAdminLeadAccess(manager)).toMatchObject({ role: "MANAGER" });
+    expect(() => requireLeadEditAccess(manager)).toThrowError(
+      expect.objectContaining({ extensions: { code: "FORBIDDEN" } }),
+    );
   });
 });

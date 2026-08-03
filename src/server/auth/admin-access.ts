@@ -3,7 +3,7 @@ import type { OrganizationRole } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/server/db/prisma";
 import {
-  ADMIN_LEAD_ROLES,
+  LEAD_VIEW_ROLES,
   AuthenticationRequiredError,
   requireAllowedRole,
   resolveAuthenticatedMembership,
@@ -41,7 +41,7 @@ export async function authorizeAdminSession(
   if (!userId) throw new AuthenticationRequiredError("Authentication is required.");
 
   const membership = await resolveAuthenticatedMembership(userId, membershipRepository);
-  requireAllowedRole(membership, ADMIN_LEAD_ROLES);
+  requireAllowedRole(membership, LEAD_VIEW_ROLES);
 
   return {
     user: {
