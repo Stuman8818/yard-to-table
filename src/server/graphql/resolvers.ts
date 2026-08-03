@@ -1,4 +1,4 @@
-import type { Lead, LeadNote, LeadStatus } from "@prisma/client";
+import type { Customer, Lead, LeadNote, LeadStatus, Property } from "@prisma/client";
 import { GraphQLError } from "graphql";
 
 import type { CreateLeadInput } from "@/graphql/generated/graphql";
@@ -8,6 +8,13 @@ import {
   updateLeadStatusSchema,
 } from "@/lib/validation/lead-management";
 import { createLead, LeadValidationError } from "@/server/leads/lead-service";
+import { customerIdSchema, convertLeadSchema } from "@/lib/validation/customer";
+import { findCustomerForOrganization } from "@/server/customers/customer-repository";
+import {
+  convertLeadToCustomer,
+  LeadAlreadyConvertedWithoutCustomerError,
+  undoLeadConversion,
+} from "@/server/customers/lead-conversion";
 import {
   addLeadNoteForOrganization,
   findLeadForOrganization,
@@ -82,6 +89,18 @@ export const resolvers = {
       const membership = requireAdminLeadAccess(context);
       return findLeadForOrganization(context.prisma, membership.organizationId, id);
     },
+    customer: (_parent: unknown, { id }: { id: string }, context: GraphQLContext) => {
+      const membership = requireAdminLeadAccess(context);
+      const customerId = customerIdSchema.safeParse(id);
+      if (!customerId.success) {
+        throw new GraphQLError("Customer not found.", { extensions: { code: "NOT_FOUND" } });
+      }
+      return findCustomerForOrganization(
+        context.prisma,
+        membership.organizationId,
+        customerId.data,
+      );
+    },
   },
   Mutation: {
     createLead: createLeadResolver,
@@ -140,6 +159,53 @@ export const resolvers = {
       }
       return note;
     },
+    convertLeadToCustomer: async (
+      _parent: unknown,
+      args: { leadId: string },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireLeadEditAccess(context);
+      const parsed = convertLeadSchema.safeParse(args);
+      if (!parsed.success) {
+        throw new GraphQLError("Choose a valid lead.", { extensions: { code: "BAD_USER_INPUT" } });
+      }
+      try {
+        const customer = await convertLeadToCustomer(
+          context.prisma,
+          membership.organizationId,
+          parsed.data.leadId,
+        );
+        if (!customer) {
+          throw new GraphQLError("Lead not found.", { extensions: { code: "NOT_FOUND" } });
+        }
+        return customer;
+      } catch (error: unknown) {
+        if (error instanceof LeadAlreadyConvertedWithoutCustomerError) {
+          throw new GraphQLError(error.message, { extensions: { code: "CONFLICT" } });
+        }
+        throw error;
+      }
+    },
+    undoLeadConversion: async (
+      _parent: unknown,
+      args: { leadId: string },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireLeadEditAccess(context);
+      const parsed = convertLeadSchema.safeParse(args);
+      if (!parsed.success) {
+        throw new GraphQLError("Choose a valid lead.", { extensions: { code: "BAD_USER_INPUT" } });
+      }
+      const lead = await undoLeadConversion(
+        context.prisma,
+        membership.organizationId,
+        parsed.data.leadId,
+      );
+      if (!lead) {
+        throw new GraphQLError("Converted lead not found.", { extensions: { code: "NOT_FOUND" } });
+      }
+      return lead;
+    },
   },
   Lead: {
     createdAt: (lead: Lead) => lead.createdAt.toISOString(),
@@ -148,5 +214,13 @@ export const resolvers = {
   LeadNote: {
     createdAt: (note: LeadNote) => note.createdAt.toISOString(),
     updatedAt: (note: LeadNote) => note.updatedAt.toISOString(),
+  },
+  Customer: {
+    createdAt: (customer: Customer) => customer.createdAt.toISOString(),
+    updatedAt: (customer: Customer) => customer.updatedAt.toISOString(),
+  },
+  Property: {
+    createdAt: (property: Property) => property.createdAt.toISOString(),
+    updatedAt: (property: Property) => property.updatedAt.toISOString(),
   },
 };

@@ -119,7 +119,15 @@ Lead details are retrieved with both the requested lead ID and the organization 
 
 `OWNER` and `ADMIN` memberships can view and modify leads. `MANAGER` memberships have read-only lead access, while `CREW` memberships are denied. Client requests never supply organization IDs, user IDs, membership IDs, or roles.
 
-Current limitations include no lead conversion, customers, properties, scheduling, estimates, jobs, invoices, note editing/deletion, pagination, or bulk actions.
+Current lead-management limitations include no scheduling, estimates, jobs, invoices, note editing/deletion, pagination, or bulk actions.
+
+### Lead conversion and customers
+
+Owners and administrators can convert a tenant-scoped lead into a customer and first property. The conversion runs in one PostgreSQL transaction, copies only the lead's existing contact and address data, marks the lead `CONVERTED`, and redirects to a read-only customer record. A unique source-lead relationship makes retries idempotent and prevents duplicate customers.
+
+Customers and properties each have required organization ownership. Composite foreign keys ensure a customer cannot originate from another organization's lead and a property cannot belong to another organization's customer. Customer retrieval always uses both the requested ID and the authenticated membership's organization ID. Managers retain read-only access; crew members cannot access lead or customer administration.
+
+This phase does not include customer or property editing, a multiple-property creation UI, scheduling, estimates, jobs, billing, or a customer portal.
 
 ## Project Structure
 

@@ -34,6 +34,7 @@ export function findLeadForOrganization(
     where: { id: leadId, organizationId },
     include: {
       requestedServices: true,
+      convertedCustomer: { select: { id: true } },
       internalNotes: {
         include: { author: { select: { name: true, email: true } } },
         orderBy: { createdAt: "desc" },

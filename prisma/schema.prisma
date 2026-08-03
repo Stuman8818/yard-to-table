@@ -32,7 +32,7 @@ enum OrganizationRole {
 }
 
 model Lead {
-  id                     String     @id @default(cuid())
+  id                     String      @id @default(cuid())
   firstName              String
   lastName               String
   email                  String
@@ -43,16 +43,19 @@ model Lead {
   state                  String
   postalCode             String
   preferredContactMethod String?
-  status                 LeadStatus @default(NEW)
+  status                 LeadStatus  @default(NEW)
+  statusBeforeConversion LeadStatus?
   notes                  String?
-  createdAt              DateTime   @default(now())
-  updatedAt              DateTime   @updatedAt
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
   organizationId         String
 
   organization      Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   internalNotes     LeadNote[]
   requestedServices LeadService[]
+  convertedCustomer Customer?     @relation("LeadConversion")
 
+  @@unique([id, organizationId])
   @@index([organizationId])
   @@index([status])
   @@index([createdAt])
@@ -68,6 +71,8 @@ model Organization {
 
   leads       Lead[]
   memberships OrganizationMembership[]
+  customers   Customer[]
+  properties  Property[]
 }
 
 model User {
@@ -122,4 +127,45 @@ model LeadNote {
 
   @@index([leadId, createdAt])
   @@index([authorUserId])
+}
+
+model Customer {
+  id             String   @id @default(cuid())
+  organizationId String
+  sourceLeadId   String?  @unique
+  firstName      String
+  lastName       String
+  email          String
+  phone          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  sourceLead   Lead?        @relation("LeadConversion", fields: [sourceLeadId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  properties   Property[]
+
+  @@unique([id, organizationId])
+  @@unique([sourceLeadId, organizationId])
+  @@index([organizationId, createdAt])
+  @@index([organizationId, email])
+}
+
+model Property {
+  id             String   @id @default(cuid())
+  organizationId String
+  customerId     String
+  addressLine1   String
+  addressLine2   String?
+  city           String
+  state          String
+  postalCode     String
+  accessNotes    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  customer     Customer     @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([customerId])
 }

@@ -45,6 +45,26 @@ query LeadDetails($id: ID!) {
         email
       }
     }
+    convertedCustomer {
+      id
+    }
+  }
+}
+
+mutation ConvertLeadToCustomer($leadId: ID!) {
+  convertLeadToCustomer(leadId: $leadId) {
+    id
+  }
+}
+
+mutation UndoLeadConversion($leadId: ID!) {
+  undoLeadConversion(leadId: $leadId) {
+    id
+    status
+    updatedAt
+    convertedCustomer {
+      id
+    }
   }
 }
 

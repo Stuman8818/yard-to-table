@@ -1,0 +1,26 @@
+query CustomerDetails($id: ID!) {
+  customer(id: $id) {
+    id
+    firstName
+    lastName
+    email
+    phone
+    createdAt
+    organization {
+      name
+    }
+    sourceLead {
+      id
+    }
+    properties {
+      id
+      addressLine1
+      addressLine2
+      city
+      state
+      postalCode
+      accessNotes
+      createdAt
+    }
+  }
+}
