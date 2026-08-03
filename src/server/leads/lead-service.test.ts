@@ -31,9 +31,13 @@ describe("lead service", () => {
     leadRepository.create.mockResolvedValue({ id: "lead-1" });
     const sendNotification = vi.fn().mockResolvedValue(undefined);
 
-    await expect(createLead(validInput, { leadRepository, sendNotification })).resolves.toEqual({
-      leadId: "lead-1",
-    });
+    await expect(
+      createLead(validInput, {
+        leadRepository,
+        organizationId: "organization-1",
+        sendNotification,
+      }),
+    ).resolves.toEqual({ leadId: "lead-1" });
     expect(leadRepository.create).toHaveBeenCalledWith({
       data: {
         firstName: "Jane",
@@ -45,6 +49,9 @@ describe("lead service", () => {
         state: "IN",
         postalCode: "46204",
         notes: "Please help with my garden beds.",
+        organization: {
+          connect: { id: "organization-1" },
+        },
         requestedServices: {
           create: [{ serviceType: "LAWN_CARE" }],
         },
@@ -62,9 +69,12 @@ describe("lead service", () => {
     async (override) => {
       const leadRepository = createRepositoryMock();
 
-      await expect(createLead({ ...validInput, ...override }, { leadRepository })).rejects.toThrow(
-        "Lead submission validation failed.",
-      );
+      await expect(
+        createLead(
+          { ...validInput, ...override },
+          { leadRepository, organizationId: "organization-1" },
+        ),
+      ).rejects.toThrow("Lead submission validation failed.");
       expect(leadRepository.create).not.toHaveBeenCalled();
     },
   );
@@ -74,9 +84,13 @@ describe("lead service", () => {
     leadRepository.create.mockRejectedValue(new Error("database unavailable"));
     const sendNotification = vi.fn();
 
-    await expect(createLead(validInput, { leadRepository, sendNotification })).rejects.toThrow(
-      "database unavailable",
-    );
+    await expect(
+      createLead(validInput, {
+        leadRepository,
+        organizationId: "organization-1",
+        sendNotification,
+      }),
+    ).rejects.toThrow("database unavailable");
     expect(sendNotification).not.toHaveBeenCalled();
   });
 
@@ -87,11 +101,37 @@ describe("lead service", () => {
     const logger = { error: vi.fn() };
 
     await expect(
-      createLead(validInput, { leadRepository, sendNotification, logger }),
+      createLead(validInput, {
+        leadRepository,
+        organizationId: "organization-1",
+        sendNotification,
+        logger,
+      }),
     ).resolves.toEqual({ leadId: "lead-2" });
     expect(logger.error).toHaveBeenCalledWith("Lead notification email failed.", {
       leadId: "lead-2",
       errorType: "Error",
     });
+  });
+
+  it("ignores a client-provided organization ID and uses the server-resolved organization", async () => {
+    const leadRepository = createRepositoryMock();
+    leadRepository.create.mockResolvedValue({ id: "lead-3" });
+
+    await createLead(
+      { ...validInput, organizationId: "attacker-organization" },
+      {
+        leadRepository,
+        organizationId: "organization-1",
+        sendNotification: vi.fn().mockResolvedValue(undefined),
+      },
+    );
+
+    expect(leadRepository.create.mock.calls[0]?.[0].data).toMatchObject({
+      organization: { connect: { id: "organization-1" } },
+    });
+    expect(JSON.stringify(leadRepository.create.mock.calls[0]?.[0].data)).not.toContain(
+      "attacker-organization",
+    );
   });
 });
