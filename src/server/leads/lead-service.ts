@@ -18,6 +18,7 @@ interface LeadServiceLogger {
 
 interface LeadServiceDependencies {
   leadRepository: LeadRepository;
+  organizationId: string;
   sendNotification?: (input: LeadSubmissionInput) => Promise<void>;
   logger?: LeadServiceLogger;
 }
@@ -61,6 +62,9 @@ export async function createLead(
       state: "IN",
       postalCode: normalized.postalCode,
       notes: normalized.message,
+      organization: {
+        connect: { id: dependencies.organizationId },
+      },
       requestedServices: {
         create: normalized.serviceTypes.map((serviceType) => ({ serviceType })),
       },

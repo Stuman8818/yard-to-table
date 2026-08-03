@@ -84,6 +84,14 @@ PostgreSQL
 
 GraphQL will support application data such as leads, customers, properties, assessments, estimates, appointments, and jobs. Specialized operations such as file uploads, authentication callbacks, and external webhooks may use dedicated Next.js route handlers.
 
+### Organization-owned data boundary
+
+`Organization` is the root owner for business data. Every `Lead` has a required organization relation, while `LeadService` remains scoped through its parent lead to avoid redundant ownership fields. The initial organization is `Yard To Table` (`yard-to-table`).
+
+For the current single-tenant phase, a centralized server-side resolver looks up that fixed slug. Both public lead creation and lead listing use the resolved organization ID. The public GraphQL input deliberately has no `organizationId`: clients cannot choose ownership, and the server remains the authority for tenant resolution.
+
+This is an initial data boundary, not complete multi-tenancy or tenant isolation. The resolver can later derive the organization from a hostname, subdomain, custom domain, route, or authenticated session. Authentication and organization memberships should be added before protected multi-organization administration; trade-specific modules can then reference the same organization boundary without duplicating applications.
+
 ## Project Structure
 
 ```text

@@ -3,6 +3,8 @@ import { GraphQLError } from "graphql";
 
 import type { CreateLeadInput } from "@/graphql/generated/graphql";
 import { createLead, LeadValidationError } from "@/server/leads/lead-service";
+import { findLeadsForOrganization } from "@/server/leads/lead-repository";
+import { resolveCurrentOrganization } from "@/server/organizations/organization-service";
 import type { GraphQLContext } from "./context";
 
 const genericLeadError = "We couldn’t submit your request. Please try again.";
@@ -13,8 +15,10 @@ export async function createLeadResolver(
   context: GraphQLContext,
 ) {
   try {
+    const organization = await resolveCurrentOrganization(context.prisma.organization);
     const result = await createLead(input, {
       leadRepository: context.prisma.lead,
+      organizationId: organization.id,
     });
 
     return {
@@ -50,15 +54,10 @@ export const resolvers = {
       status: "ok",
       timestamp: new Date().toISOString(),
     }),
-    leads: (_parent: unknown, _args: Record<string, never>, context: GraphQLContext) =>
-      context.prisma.lead.findMany({
-        include: {
-          requestedServices: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      }),
+    leads: async (_parent: unknown, _args: Record<string, never>, context: GraphQLContext) => {
+      const organization = await resolveCurrentOrganization(context.prisma.organization);
+      return findLeadsForOrganization(context.prisma, organization.id);
+    },
   },
   Mutation: {
     createLead: createLeadResolver,
