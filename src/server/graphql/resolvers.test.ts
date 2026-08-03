@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { describe, expect, it, vi } from "vitest";
 
 import type { GraphQLContext } from "./context";
-import { createLeadResolver } from "./resolvers";
+import { createLeadResolver, resolvers } from "./resolvers";
 
 describe("createLeadResolver", () => {
   it("returns a safe GraphQL error when Prisma fails", async () => {
@@ -87,6 +87,29 @@ describe("createLeadResolver", () => {
           organization: { connect: { id: "organization-1" } },
         }),
       }),
+    );
+  });
+});
+
+describe("authenticated leads resolver", () => {
+  it("uses only the trusted membership organization scope", async () => {
+    const findMany = vi.fn().mockResolvedValue([]);
+    const context = {
+      prisma: { lead: { findMany } },
+      authenticatedUserId: "user-1",
+      membership: {
+        membershipId: "membership-1",
+        organizationId: "organization-1",
+        organizationName: "Yard To Table",
+        role: "ADMIN",
+      },
+      request: new NextRequest("http://localhost/api/graphql"),
+    } as unknown as GraphQLContext;
+
+    await resolvers.Query.leads(undefined, {}, context);
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { organizationId: "organization-1" } }),
     );
   });
 });

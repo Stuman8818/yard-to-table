@@ -5,6 +5,7 @@ import type { CreateLeadInput } from "@/graphql/generated/graphql";
 import { createLead, LeadValidationError } from "@/server/leads/lead-service";
 import { findLeadsForOrganization } from "@/server/leads/lead-repository";
 import { resolveCurrentOrganization } from "@/server/organizations/organization-service";
+import { requireAdminLeadAccess } from "./authorization";
 import type { GraphQLContext } from "./context";
 
 const genericLeadError = "We couldn’t submit your request. Please try again.";
@@ -55,8 +56,8 @@ export const resolvers = {
       timestamp: new Date().toISOString(),
     }),
     leads: async (_parent: unknown, _args: Record<string, never>, context: GraphQLContext) => {
-      const organization = await resolveCurrentOrganization(context.prisma.organization);
-      return findLeadsForOrganization(context.prisma, organization.id);
+      const membership = requireAdminLeadAccess(context);
+      return findLeadsForOrganization(context.prisma, membership.organizationId);
     },
   },
   Mutation: {
