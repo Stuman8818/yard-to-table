@@ -34,7 +34,10 @@ describe("tenant-scoped lead repository", () => {
     const findFirst = vi.fn().mockResolvedValue(null);
     await findLeadForOrganization({ lead: { findFirst } } as never, "organization-1", "lead-2");
     expect(findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "lead-2", organizationId: "organization-1" } }),
+      expect.objectContaining({
+        where: { id: "lead-2", organizationId: "organization-1" },
+        include: expect.objectContaining({ convertedCustomer: { select: { id: true } } }),
+      }),
     );
   });
 

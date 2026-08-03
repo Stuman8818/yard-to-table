@@ -29,7 +29,10 @@ export function CustomerDetails({ customerId }: { customerId: string }) {
   );
   return (
     <div className="space-y-6">
-      <section className="rounded-xl border border-[#d8ddd4] bg-white p-6">
+      <section
+        id="properties"
+        className="scroll-mt-6 rounded-xl border border-[#d8ddd4] bg-white p-6"
+      >
         <h1 className="text-3xl font-bold text-[#173f32]">
           {customer.firstName} {customer.lastName}
         </h1>

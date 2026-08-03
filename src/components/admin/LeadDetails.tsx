@@ -27,6 +27,7 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
   const { data, loading, error, refetch } = useQuery(LeadDetailsDocument, {
     variables: { id: leadId },
     ssr: false,
+    fetchPolicy: "network-only",
   });
   const [updateStatus, statusResult] = useMutation(UpdateLeadStatusDocument);
   const [addNote, noteResult] = useMutation(AddLeadNoteDocument);
@@ -90,6 +91,7 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
       const result = await convertLead({ variables: { leadId } });
       const customerId = result.data?.convertLeadToCustomer.id;
       if (!customerId) throw new Error("Customer was not returned.");
+      await refetch();
       router.push(`/admin/customers/${customerId}`);
     } catch {
       setConversionMessage("This lead could not be converted. Please try again.");
@@ -186,13 +188,16 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
       </div>
       <aside className="space-y-6">
         {lead.convertedCustomer ? (
-          <div className="rounded-xl border border-[#b7d36b] bg-white p-6">
-            <h2 className="font-semibold text-[#173f32]">Customer created</h2>
+          <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-6">
+            <h2 className="font-semibold text-emerald-950">Customer converted</h2>
+            <p className="mt-2 text-sm text-emerald-800">
+              This lead now has a customer and property record.
+            </p>
             <Link
-              href={`/admin/customers/${lead.convertedCustomer.id}`}
-              className="mt-3 inline-block font-semibold text-[#476654] hover:underline"
+              href={`/admin/customers/${lead.convertedCustomer.id}#properties`}
+              className="mt-4 block w-full rounded-lg bg-emerald-700 px-4 py-2 text-center font-semibold text-white hover:bg-emerald-800"
             >
-              View customer record
+              Properties
             </Link>
           </div>
         ) : canEdit ? (
