@@ -34,6 +34,7 @@ describe("organization service", () => {
         name: CURRENT_ORGANIZATION_NAME,
         slug: CURRENT_ORGANIZATION_SLUG,
       },
+      select: { id: true },
     });
   });
 });

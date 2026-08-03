@@ -9,3 +9,9 @@ coverage
 playwright-report
 test-results
 package-lock.json
+.agents/
+.claude/
+.windsurf/
+prisma/schema.prisma
+prisma/migrations/
+src/graphql/generated/

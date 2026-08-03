@@ -92,6 +92,25 @@ For the current single-tenant phase, a centralized server-side resolver looks up
 
 This is an initial data boundary, not complete multi-tenancy or tenant isolation. The resolver can later derive the organization from a hostname, subdomain, custom domain, route, or authenticated session. Authentication and organization memberships should be added before protected multi-organization administration; trade-specific modules can then reference the same organization boundary without duplicating applications.
 
+### Authentication and administrator access
+
+Internal accounts are represented by `User`, with globally unique normalized email addresses and bcrypt password hashes. `OrganizationMembership` connects users to organizations with an `OWNER`, `ADMIN`, `MANAGER`, or `CREW` role. A user can eventually have multiple memberships, but until an organization switcher exists the application fails closed when more than one membership is found. Only `OWNER` and `ADMIN` may access `/admin/leads`.
+
+Auth.js handles email-and-password login and encrypted, HTTP-only cookie sessions. Protected pages validate the session on the server, then reload the user's trusted membership from PostgreSQL. The authenticated GraphQL lead query uses that membership's organization ID directly in its Prisma `where` clause. It never accepts a user ID, membership, organization ID, or role from the GraphQL client. The public lead-intake mutation remains unauthenticated and continues to use the separate fixed-slug public organization resolver.
+
+Create a cryptographically random Auth.js secret for each deployed environment. To seed the first administrator, set both seed credentials and run `npm run db:seed` manually after migrations:
+
+```text
+AUTH_SECRET=<random deployment secret>
+SEED_ADMIN_EMAIL=<internal administrator email>
+SEED_ADMIN_PASSWORD=<initial password of at least 12 characters>
+SEED_ADMIN_NAME=<optional display name>
+```
+
+`AUTH_SECRET` is required locally and in production. Automated tests may use a disposable test-only value. `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` are only needed for the explicit initial-admin seed; production startup and deployment do not run that seed. Re-running it does not replace an existing password or duplicate the membership.
+
+This phase does not include public registration, invitations, organization switching, password reset, full lead management, customer accounts, or crew-facing workflows.
+
 ## Project Structure
 
 ```text

@@ -15,7 +15,8 @@ interface OrganizationSeedRepository {
     where: { slug: string };
     update: { name: string };
     create: Prisma.OrganizationCreateInput;
-  }): Promise<unknown>;
+    select: { id: true };
+  }): Promise<{ id: string }>;
 }
 
 export async function resolveCurrentOrganization(
@@ -35,13 +36,14 @@ export async function resolveCurrentOrganization(
 
 export async function seedCurrentOrganization(
   repository: OrganizationSeedRepository,
-): Promise<void> {
-  await repository.upsert({
+): Promise<{ id: string }> {
+  return repository.upsert({
     where: { slug: CURRENT_ORGANIZATION_SLUG },
     update: { name: CURRENT_ORGANIZATION_NAME },
     create: {
       name: CURRENT_ORGANIZATION_NAME,
       slug: CURRENT_ORGANIZATION_SLUG,
     },
+    select: { id: true },
   });
 }
