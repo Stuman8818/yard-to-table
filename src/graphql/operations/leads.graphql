@@ -48,6 +48,23 @@ query LeadDetails($id: ID!) {
     convertedCustomer {
       id
     }
+    consultations {
+      id
+      type
+      scheduledStart
+      scheduledEnd
+      status
+      assignedUser {
+        name
+        email
+      }
+    }
+  }
+}
+
+mutation ScheduleLeadConsultation($input: ScheduleLeadConsultationInput!) {
+  scheduleLeadConsultation(input: $input) {
+    id
   }
 }
 

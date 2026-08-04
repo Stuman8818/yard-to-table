@@ -11,6 +11,14 @@ export function findCustomerForOrganization(
       organization: { select: { name: true } },
       sourceLead: { select: { id: true } },
       properties: { orderBy: { createdAt: "asc" } },
+      consultations: {
+        include: {
+          property: {
+            select: { id: true, addressLine1: true, city: true, state: true, postalCode: true },
+          },
+        },
+        orderBy: { scheduledStart: "desc" },
+      },
     },
   });
 }

@@ -51,6 +51,12 @@ export default async function AdminLeadsPage({
       </header>
       <section className="mx-auto max-w-7xl px-6 py-10">
         <h1 className="text-3xl font-bold tracking-tight text-[#173f32]">Leads</h1>
+        <Link
+          href="/admin/consultations"
+          className="mt-3 inline-block font-semibold text-[#476654] hover:underline"
+        >
+          View consultations
+        </Link>
         <p className="mt-2 text-[#5b685f]">Recent service requests for your organization.</p>
         <form
           method="get"

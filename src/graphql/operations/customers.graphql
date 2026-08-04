@@ -22,5 +22,26 @@ query CustomerDetails($id: ID!) {
       accessNotes
       createdAt
     }
+    consultations {
+      id
+      scheduledStart
+      scheduledEnd
+      status
+      type
+      notes
+      property {
+        id
+        addressLine1
+        city
+        state
+        postalCode
+      }
+    }
+  }
+}
+
+mutation ScheduleConsultation($input: ScheduleConsultationInput!) {
+  scheduleConsultation(input: $input) {
+    id
   }
 }
