@@ -62,6 +62,32 @@ query ConsultationDetails($id: ID!) {
       name
       email
     }
+    completedAt
+    completedBy {
+      name
+      email
+    }
+    completionNotes
+    actualDuration
+    outcome
+  }
+}
+
+mutation CompleteConsultation($input: CompleteConsultationInput!) {
+  completeConsultation(input: $input) {
+    id
+    status
+    completedAt
+    completionNotes
+    actualDuration
+    outcome
+  }
+}
+
+mutation MarkConsultationLeadLost($input: MarkConsultationLeadLostInput!) {
+  markConsultationLeadLost(input: $input) {
+    id
+    status
   }
 }
 

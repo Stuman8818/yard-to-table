@@ -54,6 +54,10 @@ query LeadDetails($id: ID!) {
       scheduledStart
       scheduledEnd
       status
+      completedAt
+      completionNotes
+      actualDuration
+      outcome
       assignedUser {
         name
         email

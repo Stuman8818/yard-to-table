@@ -10,6 +10,7 @@ enum LeadStatus {
   NEW
   CONTACTED
   CONSULTATION_SCHEDULED
+  CONSULTATION_COMPLETED
   ESTIMATE_SENT
   CONVERTED
   LOST
@@ -41,6 +42,14 @@ enum ConsultationStatus {
 enum ConsultationType {
   ON_SITE
   PHONE
+}
+
+enum ConsultationOutcome {
+  ASSESSMENT_NEEDED
+  READY_FOR_ESTIMATE
+  FOLLOW_UP_NEEDED
+  NOT_A_GOOD_FIT
+  CUSTOMER_NOT_INTERESTED
 }
 
 model Lead {
@@ -98,10 +107,11 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  memberships           OrganizationMembership[]
-  leadNotes             LeadNote[]
-  consultationsCreated  Consultation[]
-  consultationsAssigned Consultation[]           @relation("ConsultationAssignee")
+  memberships            OrganizationMembership[]
+  leadNotes              LeadNote[]
+  consultationsCreated   Consultation[]
+  consultationsAssigned  Consultation[]           @relation("ConsultationAssignee")
+  consultationsCompleted Consultation[]           @relation("ConsultationCompleter")
 }
 
 model OrganizationMembership {
@@ -193,20 +203,25 @@ model Property {
 }
 
 model Consultation {
-  id              String             @id @default(cuid())
-  organizationId  String
-  leadId          String?
-  customerId      String?
-  propertyId      String?
-  assignedUserId  String?
-  type            ConsultationType   @default(ON_SITE)
-  scheduledStart  DateTime
-  scheduledEnd    DateTime
-  status          ConsultationStatus @default(SCHEDULED)
-  notes           String?
-  createdByUserId String
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  id                String               @id @default(cuid())
+  organizationId    String
+  leadId            String?
+  customerId        String?
+  propertyId        String?
+  assignedUserId    String?
+  completedByUserId String?
+  type              ConsultationType     @default(ON_SITE)
+  scheduledStart    DateTime
+  scheduledEnd      DateTime
+  status            ConsultationStatus   @default(SCHEDULED)
+  notes             String?
+  completedAt       DateTime?
+  completionNotes   String?
+  actualDuration    Int?
+  outcome           ConsultationOutcome?
+  createdByUserId   String
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   lead         Lead?        @relation(fields: [leadId, organizationId], references: [id, organizationId], onDelete: Restrict)
@@ -214,6 +229,7 @@ model Consultation {
   property     Property?    @relation(fields: [propertyId, organizationId], references: [id, organizationId], onDelete: Restrict)
   createdBy    User         @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
   assignedUser User?        @relation("ConsultationAssignee", fields: [assignedUserId], references: [id], onDelete: Restrict)
+  completedBy  User?        @relation("ConsultationCompleter", fields: [completedByUserId], references: [id], onDelete: Restrict)
 
   @@index([organizationId, scheduledStart])
   @@index([customerId, scheduledStart])
@@ -221,4 +237,5 @@ model Consultation {
   @@index([createdByUserId])
   @@index([leadId, scheduledStart])
   @@index([assignedUserId])
+  @@index([completedByUserId])
 }

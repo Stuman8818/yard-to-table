@@ -131,7 +131,7 @@ This phase does not include customer or property editing, a multiple-property cr
 
 ### Consultations
 
-Owners and administrators can schedule a consultation for one of a customer's tenant-owned properties, then reschedule it, update its notes, or move it through `SCHEDULED`, `COMPLETED`, `CANCELED`, and `NO_SHOW`. Managers have read-only access and crew members are denied. Upcoming, past, and complete history views retain completed and canceled appointments.
+Owners and administrators can schedule consultations directly from a lead. Scheduled consultations can be rescheduled, canceled, or marked as a no-show; completion uses a dedicated confirmation workflow that records the outcome, completion metadata, lead activity, and the `CONSULTATION_COMPLETED` lead status. Completed consultations are locked in history and offer working follow-up and lead-loss actions without automatically converting the lead. Managers have read-only access and crew members are denied.
 
 Consultations belong independently to the organization, customer, and property, with composite PostgreSQL foreign keys preventing cross-tenant or mismatched customer/property records. The authenticated user is recorded as creator; client requests cannot choose organization, creator, or role. Consultations remain separate from jobs because an appointment can be canceled, missed, or completed without becoming contracted work.
 

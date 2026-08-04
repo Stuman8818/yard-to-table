@@ -60,3 +60,21 @@ export const updateConsultationSchema = z
     message: "End time must be after start time.",
     path: ["scheduledEnd"],
   });
+
+export const completeConsultationSchema = z.object({
+  consultationId: id,
+  outcome: z.enum([
+    "ASSESSMENT_NEEDED",
+    "READY_FOR_ESTIMATE",
+    "FOLLOW_UP_NEEDED",
+    "NOT_A_GOOD_FIT",
+    "CUSTOMER_NOT_INTERESTED",
+  ]),
+  completionNotes: z.string().trim().max(4000).optional(),
+  actualDuration: z.number().int().min(1).max(1440).optional(),
+});
+
+export const markConsultationLeadLostSchema = z.object({
+  consultationId: id,
+  reason: z.string().trim().min(1, "Enter a loss reason.").max(1000),
+});

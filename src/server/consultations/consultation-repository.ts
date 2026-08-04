@@ -1,4 +1,4 @@
-import type { ConsultationStatus, PrismaClient } from "@prisma/client";
+import type { ConsultationOutcome, ConsultationStatus, PrismaClient } from "@prisma/client";
 
 const include = {
   customer: { select: { id: true, firstName: true, lastName: true } },
@@ -14,6 +14,7 @@ const include = {
   },
   createdBy: { select: { name: true, email: true } },
   assignedUser: { select: { name: true, email: true } },
+  completedBy: { select: { name: true, email: true } },
   lead: { select: { id: true, firstName: true, lastName: true } },
 };
 
@@ -192,6 +193,7 @@ export async function updateConsultationForOrganization(
       select: { id: true, leadId: true, status: true },
     });
     if (!existing) return null;
+    if (existing.status === "COMPLETED" || input.status === "COMPLETED") return null;
     const consultation = await tx.consultation.update({
       where: { id: existing.id },
       data: {
@@ -216,5 +218,104 @@ export async function updateConsultationForOrganization(
       });
     }
     return consultation;
+  });
+}
+
+export async function completeConsultationForOrganization(
+  prisma: PrismaClient,
+  organizationId: string,
+  userId: string,
+  input: {
+    consultationId: string;
+    outcome: ConsultationOutcome;
+    completionNotes?: string;
+    actualDuration?: number;
+  },
+) {
+  return prisma.$transaction(async (tx) => {
+    const existing = await tx.consultation.findFirst({
+      where: { id: input.consultationId, organizationId },
+      select: { id: true, leadId: true, status: true },
+    });
+    if (!existing?.leadId) return null;
+    if (existing.status === "COMPLETED") {
+      const consultation = await tx.consultation.findFirst({
+        where: { id: existing.id, organizationId },
+        include,
+      });
+      return consultation ? { consultation, duplicate: true } : null;
+    }
+    if (existing.status !== "SCHEDULED") return null;
+
+    const lead = await tx.lead.findFirst({
+      where: { id: existing.leadId, organizationId },
+      select: { id: true },
+    });
+    if (!lead) return null;
+    const completedAt = new Date();
+    const completion = await tx.consultation.updateMany({
+      where: { id: existing.id, organizationId, status: "SCHEDULED" },
+      data: {
+        status: "COMPLETED",
+        completedAt,
+        completedByUserId: userId,
+        completionNotes: input.completionNotes || null,
+        actualDuration: input.actualDuration ?? null,
+        outcome: input.outcome,
+      },
+    });
+    if (completion.count !== 1) {
+      const consultation = await tx.consultation.findFirst({
+        where: { id: existing.id, organizationId, status: "COMPLETED" },
+        include,
+      });
+      return consultation ? { consultation, duplicate: true } : null;
+    }
+    const consultation = await tx.consultation.findFirst({
+      where: { id: existing.id, organizationId },
+      include,
+    });
+    if (!consultation) return null;
+    await tx.lead.update({
+      where: { id: lead.id },
+      data: { status: "CONSULTATION_COMPLETED" },
+    });
+    const outcomeLabel = input.outcome
+      .replaceAll("_", " ")
+      .toLowerCase()
+      .replace(/^./, (letter) => letter.toUpperCase());
+    const content = [
+      "Consultation Completed",
+      `Outcome: ${outcomeLabel}`,
+      ...(input.completionNotes ? [`Completion Notes: ${input.completionNotes}`] : []),
+    ].join("\n");
+    await tx.leadNote.create({ data: { leadId: lead.id, authorUserId: userId, content } });
+    return { consultation, duplicate: false };
+  });
+}
+
+export async function markConsultationLeadLost(
+  prisma: PrismaClient,
+  organizationId: string,
+  userId: string,
+  consultationId: string,
+  reason: string,
+) {
+  return prisma.$transaction(async (tx) => {
+    const consultation = await tx.consultation.findFirst({
+      where: { id: consultationId, organizationId, status: "COMPLETED" },
+      select: { leadId: true },
+    });
+    if (!consultation?.leadId) return null;
+    const lead = await tx.lead.findFirst({
+      where: { id: consultation.leadId, organizationId },
+      select: { id: true },
+    });
+    if (!lead) return null;
+    const updated = await tx.lead.update({ where: { id: lead.id }, data: { status: "LOST" } });
+    await tx.leadNote.create({
+      data: { leadId: lead.id, authorUserId: userId, content: `Lead marked lost: ${reason}` },
+    });
+    return updated;
   });
 }

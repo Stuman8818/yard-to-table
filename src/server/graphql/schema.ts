@@ -17,6 +17,8 @@ export const typeDefs = `#graphql
     scheduleConsultation(input: ScheduleConsultationInput!): Consultation!
     updateConsultation(input: UpdateConsultationInput!): Consultation!
     scheduleLeadConsultation(input: ScheduleLeadConsultationInput!): Consultation!
+    completeConsultation(input: CompleteConsultationInput!): Consultation!
+    markConsultationLeadLost(input: MarkConsultationLeadLostInput!): Lead!
   }
 
   input CreateLeadInput {
@@ -108,14 +110,22 @@ export const typeDefs = `#graphql
     property: Property
     createdBy: LeadNoteAuthor!
     assignedUser: LeadNoteAuthor
+    completedAt: String
+    completedBy: LeadNoteAuthor
+    completionNotes: String
+    actualDuration: Int
+    outcome: ConsultationOutcome
   }
   type ConsultationLead { id: ID!, firstName: String!, lastName: String! }
   type ConsultationCustomer { id: ID!, firstName: String!, lastName: String! }
   input ScheduleConsultationInput { customerId: ID!, propertyId: ID!, scheduledStart: String!, scheduledEnd: String!, notes: String }
   input UpdateConsultationInput { consultationId: ID!, status: ConsultationStatus!, scheduledStart: String!, scheduledEnd: String!, notes: String }
   input ScheduleLeadConsultationInput { leadId: ID!, type: ConsultationType!, scheduledStart: String!, scheduledEnd: String!, notes: String, addressLine1: String, addressLine2: String, city: String, state: String, postalCode: String }
+  input CompleteConsultationInput { consultationId: ID!, outcome: ConsultationOutcome!, completionNotes: String, actualDuration: Int }
+  input MarkConsultationLeadLostInput { consultationId: ID!, reason: String! }
   enum ConsultationStatus { SCHEDULED COMPLETED CANCELED NO_SHOW }
   enum ConsultationType { ON_SITE PHONE }
+  enum ConsultationOutcome { ASSESSMENT_NEEDED READY_FOR_ESTIMATE FOLLOW_UP_NEEDED NOT_A_GOOD_FIT CUSTOMER_NOT_INTERESTED }
   enum ConsultationScope { UPCOMING PAST ALL }
 
   type LeadNote {
@@ -141,6 +151,7 @@ export const typeDefs = `#graphql
     NEW
     CONTACTED
     CONSULTATION_SCHEDULED
+    CONSULTATION_COMPLETED
     ESTIMATE_SENT
     CONVERTED
     LOST

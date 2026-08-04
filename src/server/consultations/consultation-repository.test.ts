@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  completeConsultationForOrganization,
   findConsultationForOrganization,
   findConsultationsForOrganization,
+  markConsultationLeadLost,
   scheduleConsultation,
   scheduleConsultationForLead,
   updateConsultationForOrganization,
@@ -175,5 +177,136 @@ describe("tenant-scoped consultations", () => {
         content: "Consultation cancelled.",
       },
     });
+  });
+  it("completes a consultation, updates its lead, and records activity atomically", async () => {
+    const completed = {
+      id: "consultation-1",
+      status: "COMPLETED",
+      completedAt: new Date(),
+      outcome: "READY_FOR_ESTIMATE",
+      completionNotes: "Measurements captured.",
+      actualDuration: 75,
+    };
+    const tx = {
+      consultation: {
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce({ id: "consultation-1", leadId: "lead-1", status: "SCHEDULED" })
+          .mockResolvedValueOnce(completed),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+      },
+      lead: {
+        findFirst: vi.fn().mockResolvedValue({ id: "lead-1" }),
+        update: vi.fn(),
+      },
+      leadNote: { create: vi.fn() },
+      customer: { create: vi.fn() },
+    };
+    const prisma = { $transaction: vi.fn((fn) => fn(tx)) };
+    const result = await completeConsultationForOrganization(prisma as never, "org-1", "user-1", {
+      consultationId: "consultation-1",
+      outcome: "READY_FOR_ESTIMATE",
+      completionNotes: "Measurements captured.",
+      actualDuration: 75,
+    });
+
+    expect(result).toEqual({ consultation: completed, duplicate: false });
+    expect(tx.consultation.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ organizationId: "org-1", status: "SCHEDULED" }),
+        data: expect.objectContaining({
+          status: "COMPLETED",
+          completedAt: expect.any(Date),
+          completedByUserId: "user-1",
+          outcome: "READY_FOR_ESTIMATE",
+          completionNotes: "Measurements captured.",
+          actualDuration: 75,
+        }),
+      }),
+    );
+    expect(tx.lead.update).toHaveBeenCalledWith({
+      where: { id: "lead-1" },
+      data: { status: "CONSULTATION_COMPLETED" },
+    });
+    expect(tx.leadNote.create).toHaveBeenCalledTimes(1);
+    expect(tx.leadNote.create).toHaveBeenCalledWith({
+      data: {
+        leadId: "lead-1",
+        authorUserId: "user-1",
+        content:
+          "Consultation Completed\nOutcome: Ready for estimate\nCompletion Notes: Measurements captured.",
+      },
+    });
+    expect(tx.customer.create).not.toHaveBeenCalled();
+  });
+  it("rejects cross-organization completion without writing", async () => {
+    const tx = {
+      consultation: { findFirst: vi.fn().mockResolvedValue(null), updateMany: vi.fn() },
+      lead: { findFirst: vi.fn(), update: vi.fn() },
+      leadNote: { create: vi.fn() },
+    };
+    const prisma = { $transaction: vi.fn((fn) => fn(tx)) };
+    const result = await completeConsultationForOrganization(prisma as never, "org-1", "user-1", {
+      consultationId: "other-org",
+      outcome: "FOLLOW_UP_NEEDED",
+    });
+
+    expect(result).toBeNull();
+    expect(tx.consultation.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "other-org", organizationId: "org-1" } }),
+    );
+    expect(tx.consultation.updateMany).not.toHaveBeenCalled();
+    expect(tx.leadNote.create).not.toHaveBeenCalled();
+  });
+  it("does not duplicate activity when completion is submitted again", async () => {
+    const completed = { id: "consultation-1", leadId: "lead-1", status: "COMPLETED" };
+    const tx = {
+      consultation: { findFirst: vi.fn().mockResolvedValue(completed), updateMany: vi.fn() },
+      lead: { findFirst: vi.fn(), update: vi.fn() },
+      leadNote: { create: vi.fn() },
+    };
+    const prisma = { $transaction: vi.fn((fn) => fn(tx)) };
+    const result = await completeConsultationForOrganization(prisma as never, "org-1", "user-1", {
+      consultationId: "consultation-1",
+      outcome: "FOLLOW_UP_NEEDED",
+    });
+
+    expect(result).toEqual({ consultation: completed, duplicate: true });
+    expect(tx.lead.update).not.toHaveBeenCalled();
+    expect(tx.leadNote.create).not.toHaveBeenCalled();
+  });
+  it("marks the lead lost without changing the completed consultation", async () => {
+    const tx = {
+      consultation: { findFirst: vi.fn().mockResolvedValue({ leadId: "lead-1" }), update: vi.fn() },
+      lead: {
+        findFirst: vi.fn().mockResolvedValue({ id: "lead-1" }),
+        update: vi.fn().mockResolvedValue({ id: "lead-1", status: "LOST" }),
+      },
+      leadNote: { create: vi.fn() },
+    };
+    const prisma = { $transaction: vi.fn((fn) => fn(tx)) };
+    await markConsultationLeadLost(
+      prisma as never,
+      "org-1",
+      "user-1",
+      "consultation-1",
+      "Customer declined",
+    );
+
+    expect(tx.consultation.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "consultation-1", organizationId: "org-1", status: "COMPLETED" },
+      }),
+    );
+    expect(tx.consultation.update).not.toHaveBeenCalled();
+    expect(tx.lead.update).toHaveBeenCalledWith({
+      where: { id: "lead-1" },
+      data: { status: "LOST" },
+    });
+    expect(tx.leadNote.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ content: "Lead marked lost: Customer declined" }),
+      }),
+    );
   });
 });
