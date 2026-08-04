@@ -1,4 +1,4 @@
-import type { Customer, Lead, LeadNote, LeadStatus, Property } from "@prisma/client";
+import type { Consultation, Customer, Lead, LeadNote, LeadStatus, Property } from "@prisma/client";
 import { GraphQLError } from "graphql";
 
 import type { CreateLeadInput } from "@/graphql/generated/graphql";
@@ -9,6 +9,20 @@ import {
 } from "@/lib/validation/lead-management";
 import { createLead, LeadValidationError } from "@/server/leads/lead-service";
 import { customerIdSchema, convertLeadSchema } from "@/lib/validation/customer";
+import {
+  consultationIdSchema,
+  scheduleConsultationSchema,
+  scheduleLeadConsultationSchema,
+  updateConsultationSchema,
+} from "@/lib/validation/consultation";
+import {
+  findConsultationForOrganization,
+  findConsultationsForOrganization,
+  scheduleConsultation,
+  scheduleConsultationForLead,
+  updateConsultationForOrganization,
+} from "@/server/consultations/consultation-repository";
+import { sendConsultationConfirmation } from "@/server/email/consultation-confirmation";
 import { findCustomerForOrganization } from "@/server/customers/customer-repository";
 import {
   convertLeadToCustomer,
@@ -101,6 +115,29 @@ export const resolvers = {
         customerId.data,
       );
     },
+    consultations: (
+      _parent: unknown,
+      { scope }: { scope?: "UPCOMING" | "PAST" | "ALL" },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireAdminLeadAccess(context);
+      return findConsultationsForOrganization(
+        context.prisma,
+        membership.organizationId,
+        scope ?? "UPCOMING",
+      );
+    },
+    consultation: (_parent: unknown, { id }: { id: string }, context: GraphQLContext) => {
+      const membership = requireAdminLeadAccess(context);
+      const parsed = consultationIdSchema.safeParse(id);
+      if (!parsed.success)
+        throw new GraphQLError("Consultation not found.", { extensions: { code: "NOT_FOUND" } });
+      return findConsultationForOrganization(
+        context.prisma,
+        membership.organizationId,
+        parsed.data,
+      );
+    },
   },
   Mutation: {
     createLead: createLeadResolver,
@@ -117,6 +154,11 @@ export const resolvers = {
         });
       }
       const input = parsed.data;
+      if (input.status === "CONVERTED") {
+        throw new GraphQLError("Convert the lead through the conversion workflow.", {
+          extensions: { code: "BAD_USER_INPUT" },
+        });
+      }
       const lead = await updateLeadStatusForOrganization(
         context.prisma,
         membership.organizationId,
@@ -206,6 +248,120 @@ export const resolvers = {
       }
       return lead;
     },
+    scheduleConsultation: async (
+      _parent: unknown,
+      {
+        input,
+      }: {
+        input: {
+          customerId: string;
+          propertyId: string;
+          scheduledStart: string;
+          scheduledEnd: string;
+          notes?: string | null;
+        };
+      },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireLeadEditAccess(context);
+      if (!context.authenticatedUserId)
+        throw new GraphQLError("Authentication is required.", {
+          extensions: { code: "UNAUTHENTICATED" },
+        });
+      const parsed = scheduleConsultationSchema.safeParse({
+        ...input,
+        notes: input.notes ?? undefined,
+      });
+      if (!parsed.success)
+        throw new GraphQLError(
+          parsed.error.issues[0]?.message ?? "Enter valid consultation details.",
+          { extensions: { code: "BAD_USER_INPUT" } },
+        );
+      const consultation = await scheduleConsultation(
+        context.prisma,
+        membership.organizationId,
+        context.authenticatedUserId,
+        parsed.data,
+      );
+      if (!consultation)
+        throw new GraphQLError("Customer property not found.", {
+          extensions: { code: "NOT_FOUND" },
+        });
+      return consultation;
+    },
+    updateConsultation: async (
+      _parent: unknown,
+      {
+        input,
+      }: {
+        input: {
+          consultationId: string;
+          status: "SCHEDULED" | "COMPLETED" | "CANCELED" | "NO_SHOW";
+          scheduledStart: string;
+          scheduledEnd: string;
+          notes?: string | null;
+        };
+      },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireLeadEditAccess(context);
+      const parsed = updateConsultationSchema.safeParse({
+        ...input,
+        notes: input.notes ?? undefined,
+      });
+      if (!parsed.success)
+        throw new GraphQLError(
+          parsed.error.issues[0]?.message ?? "Enter valid consultation details.",
+          { extensions: { code: "BAD_USER_INPUT" } },
+        );
+      const consultation = await updateConsultationForOrganization(
+        context.prisma,
+        membership.organizationId,
+        context.authenticatedUserId!,
+        parsed.data,
+      );
+      if (!consultation)
+        throw new GraphQLError("Consultation not found.", { extensions: { code: "NOT_FOUND" } });
+      return consultation;
+    },
+    scheduleLeadConsultation: async (
+      _parent: unknown,
+      { input }: { input: Record<string, unknown> },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireLeadEditAccess(context);
+      const userId = context.authenticatedUserId;
+      if (!userId)
+        throw new GraphQLError("Authentication is required.", {
+          extensions: { code: "UNAUTHENTICATED" },
+        });
+      const parsed = scheduleLeadConsultationSchema.safeParse(input);
+      if (!parsed.success)
+        throw new GraphQLError(parsed.error.issues[0]?.message ?? "Enter valid details.", {
+          extensions: { code: "BAD_USER_INPUT" },
+        });
+      const result = await scheduleConsultationForLead(
+        context.prisma,
+        membership.organizationId,
+        userId,
+        parsed.data,
+      );
+      if (!result) throw new GraphQLError("Lead not found.", { extensions: { code: "NOT_FOUND" } });
+      if (!result.duplicate) {
+        void sendConsultationConfirmation({
+          email: result.lead.email,
+          firstName: result.lead.firstName,
+          scheduledStart: parsed.data.scheduledStart,
+          type: parsed.data.type,
+        }).catch((error: unknown) =>
+          console.error("Consultation confirmation email failed.", {
+            consultationId: result.consultation.id,
+            errorType: error instanceof Error ? error.name : "UnknownError",
+          }),
+        );
+      }
+      return result.consultation;
+    },
   },
   Lead: {
     createdAt: (lead: Lead) => lead.createdAt.toISOString(),
@@ -222,5 +378,11 @@ export const resolvers = {
   Property: {
     createdAt: (property: Property) => property.createdAt.toISOString(),
     updatedAt: (property: Property) => property.updatedAt.toISOString(),
+  },
+  Consultation: {
+    scheduledStart: (value: Consultation) => value.scheduledStart.toISOString(),
+    scheduledEnd: (value: Consultation) => value.scheduledEnd.toISOString(),
+    createdAt: (value: Consultation) => value.createdAt.toISOString(),
+    updatedAt: (value: Consultation) => value.updatedAt.toISOString(),
   },
 };

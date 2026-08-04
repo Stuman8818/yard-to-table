@@ -31,6 +31,18 @@ enum OrganizationRole {
   CREW
 }
 
+enum ConsultationStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELED
+  NO_SHOW
+}
+
+enum ConsultationType {
+  ON_SITE
+  PHONE
+}
+
 model Lead {
   id                     String      @id @default(cuid())
   firstName              String
@@ -50,10 +62,12 @@ model Lead {
   updatedAt              DateTime    @updatedAt
   organizationId         String
 
-  organization      Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  organization      Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   internalNotes     LeadNote[]
   requestedServices LeadService[]
-  convertedCustomer Customer?     @relation("LeadConversion")
+  convertedCustomer Customer?      @relation("LeadConversion")
+  properties        Property[]
+  consultations     Consultation[]
 
   @@unique([id, organizationId])
   @@index([organizationId])
@@ -69,10 +83,11 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  leads       Lead[]
-  memberships OrganizationMembership[]
-  customers   Customer[]
-  properties  Property[]
+  leads         Lead[]
+  memberships   OrganizationMembership[]
+  customers     Customer[]
+  properties    Property[]
+  consultations Consultation[]
 }
 
 model User {
@@ -83,8 +98,10 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  memberships OrganizationMembership[]
-  leadNotes   LeadNote[]
+  memberships           OrganizationMembership[]
+  leadNotes             LeadNote[]
+  consultationsCreated  Consultation[]
+  consultationsAssigned Consultation[]           @relation("ConsultationAssignee")
 }
 
 model OrganizationMembership {
@@ -140,9 +157,10 @@ model Customer {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  sourceLead   Lead?        @relation("LeadConversion", fields: [sourceLeadId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  properties   Property[]
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  sourceLead    Lead?          @relation("LeadConversion", fields: [sourceLeadId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  properties    Property[]
+  consultations Consultation[]
 
   @@unique([id, organizationId])
   @@unique([sourceLeadId, organizationId])
@@ -153,7 +171,8 @@ model Customer {
 model Property {
   id             String   @id @default(cuid())
   organizationId String
-  customerId     String
+  customerId     String?
+  leadId         String?
   addressLine1   String
   addressLine2   String?
   city           String
@@ -163,9 +182,43 @@ model Property {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  customer     Customer     @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  customer      Customer?      @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  lead          Lead?          @relation(fields: [leadId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  consultations Consultation[]
 
+  @@unique([id, organizationId])
   @@index([organizationId, createdAt])
   @@index([customerId])
+}
+
+model Consultation {
+  id              String             @id @default(cuid())
+  organizationId  String
+  leadId          String?
+  customerId      String?
+  propertyId      String?
+  assignedUserId  String?
+  type            ConsultationType   @default(ON_SITE)
+  scheduledStart  DateTime
+  scheduledEnd    DateTime
+  status          ConsultationStatus @default(SCHEDULED)
+  notes           String?
+  createdByUserId String
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  lead         Lead?        @relation(fields: [leadId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  customer     Customer?    @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  property     Property?    @relation(fields: [propertyId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  createdBy    User         @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
+  assignedUser User?        @relation("ConsultationAssignee", fields: [assignedUserId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, scheduledStart])
+  @@index([customerId, scheduledStart])
+  @@index([propertyId, scheduledStart])
+  @@index([createdByUserId])
+  @@index([leadId, scheduledStart])
+  @@index([assignedUserId])
 }

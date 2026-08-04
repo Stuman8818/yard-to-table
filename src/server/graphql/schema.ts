@@ -4,6 +4,8 @@ export const typeDefs = `#graphql
     leads(search: String, status: LeadStatus, sort: LeadSort = NEWEST): [Lead!]!
     lead(id: ID!): Lead
     customer(id: ID!): Customer
+    consultations(scope: ConsultationScope = UPCOMING): [Consultation!]!
+    consultation(id: ID!): Consultation
   }
 
   type Mutation {
@@ -12,6 +14,9 @@ export const typeDefs = `#graphql
     addLeadNote(leadId: ID!, content: String!): LeadNote!
     convertLeadToCustomer(leadId: ID!): Customer!
     undoLeadConversion(leadId: ID!): Lead!
+    scheduleConsultation(input: ScheduleConsultationInput!): Consultation!
+    updateConsultation(input: UpdateConsultationInput!): Consultation!
+    scheduleLeadConsultation(input: ScheduleLeadConsultationInput!): Consultation!
   }
 
   input CreateLeadInput {
@@ -57,6 +62,7 @@ export const typeDefs = `#graphql
     requestedServices: [LeadService!]!
     internalNotes: [LeadNote!]!
     convertedCustomer: Customer
+    consultations: [Consultation!]!
   }
 
   type Customer {
@@ -70,6 +76,7 @@ export const typeDefs = `#graphql
     organization: CustomerOrganization!
     sourceLead: CustomerSourceLead
     properties: [Property!]!
+    consultations: [Consultation!]!
   }
 
   type CustomerOrganization { name: String! }
@@ -86,6 +93,30 @@ export const typeDefs = `#graphql
     createdAt: String!
     updatedAt: String!
   }
+
+  type Consultation {
+    id: ID!
+    scheduledStart: String!
+    scheduledEnd: String!
+    status: ConsultationStatus!
+    notes: String
+    createdAt: String!
+    updatedAt: String!
+    type: ConsultationType!
+    lead: ConsultationLead
+    customer: ConsultationCustomer
+    property: Property
+    createdBy: LeadNoteAuthor!
+    assignedUser: LeadNoteAuthor
+  }
+  type ConsultationLead { id: ID!, firstName: String!, lastName: String! }
+  type ConsultationCustomer { id: ID!, firstName: String!, lastName: String! }
+  input ScheduleConsultationInput { customerId: ID!, propertyId: ID!, scheduledStart: String!, scheduledEnd: String!, notes: String }
+  input UpdateConsultationInput { consultationId: ID!, status: ConsultationStatus!, scheduledStart: String!, scheduledEnd: String!, notes: String }
+  input ScheduleLeadConsultationInput { leadId: ID!, type: ConsultationType!, scheduledStart: String!, scheduledEnd: String!, notes: String, addressLine1: String, addressLine2: String, city: String, state: String, postalCode: String }
+  enum ConsultationStatus { SCHEDULED COMPLETED CANCELED NO_SHOW }
+  enum ConsultationType { ON_SITE PHONE }
+  enum ConsultationScope { UPCOMING PAST ALL }
 
   type LeadNote {
     id: ID!

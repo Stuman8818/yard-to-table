@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { CustomerDetails } from "@/components/admin/CustomerDetails";
 import { getAdminPageAccess } from "@/server/auth/admin-access";
-import { AuthenticationRequiredError } from "@/server/auth/auth-service";
+import { AuthenticationRequiredError, canEditLeads } from "@/server/auth/auth-service";
 
 export default async function CustomerDetailsPage({
   params,
@@ -32,7 +32,7 @@ export default async function CustomerDetailsPage({
           Back to leads
         </Link>
         <div className="mt-6">
-          <CustomerDetails customerId={customerId} />
+          <CustomerDetails customerId={customerId} canEdit={canEditLeads(access.membership.role)} />
         </div>
       </section>
     </main>

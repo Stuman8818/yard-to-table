@@ -1,0 +1,77 @@
+query Consultations($scope: ConsultationScope) {
+  consultations(scope: $scope) {
+    id
+    type
+    scheduledStart
+    scheduledEnd
+    status
+    notes
+    lead {
+      id
+      firstName
+      lastName
+    }
+    customer {
+      id
+      firstName
+      lastName
+    }
+    property {
+      id
+      addressLine1
+      city
+      state
+      postalCode
+    }
+  }
+}
+
+query ConsultationDetails($id: ID!) {
+  consultation(id: $id) {
+    id
+    type
+    scheduledStart
+    scheduledEnd
+    status
+    notes
+    createdAt
+    updatedAt
+    lead {
+      id
+      firstName
+      lastName
+    }
+    customer {
+      id
+      firstName
+      lastName
+    }
+    property {
+      id
+      addressLine1
+      addressLine2
+      city
+      state
+      postalCode
+    }
+    createdBy {
+      name
+      email
+    }
+    assignedUser {
+      name
+      email
+    }
+  }
+}
+
+mutation UpdateConsultation($input: UpdateConsultationInput!) {
+  updateConsultation(input: $input) {
+    id
+    scheduledStart
+    scheduledEnd
+    status
+    notes
+    updatedAt
+  }
+}

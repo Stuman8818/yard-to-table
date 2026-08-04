@@ -9,10 +9,12 @@ import {
   AddLeadNoteDocument,
   ConvertLeadToCustomerDocument,
   LeadDetailsDocument,
+  ScheduleLeadConsultationDocument,
   UndoLeadConversionDocument,
   UpdateLeadStatusDocument,
   type LeadStatus,
 } from "@/graphql/generated/graphql";
+import { consultationDurations, consultationEndFromDuration } from "@/lib/consultation-durations";
 
 const leadStatuses = [
   "NEW",
@@ -33,6 +35,8 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
   const [addNote, noteResult] = useMutation(AddLeadNoteDocument);
   const [convertLead, convertResult] = useMutation(ConvertLeadToCustomerDocument);
   const [undoConversion, undoResult] = useMutation(UndoLeadConversionDocument);
+  const [scheduleConsultation, scheduleResult] = useMutation(ScheduleLeadConsultationDocument);
+  const [consultationType, setConsultationType] = useState<"ON_SITE" | "PHONE">("ON_SITE");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [noteMessage, setNoteMessage] = useState<string | null>(null);
   const [conversionMessage, setConversionMessage] = useState<string | null>(null);
@@ -48,6 +52,8 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
       </div>
     );
   const lead = data.lead;
+  const activeConsultation = lead.consultations.find((item) => item.status === "SCHEDULED");
+  const completedConsultation = lead.consultations.find((item) => item.status === "COMPLETED");
   const date = (value: string) =>
     new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(
       new Date(value),
@@ -114,6 +120,44 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
       setConversionMessage("Conversion undone.");
     } catch {
       setConversionMessage("The conversion could not be undone.");
+    }
+  }
+
+  async function submitConsultation(formData: FormData) {
+    const start = String(formData.get("scheduledStart"));
+    const scheduledEnd = consultationEndFromDuration(start, String(formData.get("duration")));
+    if (!scheduledEnd) {
+      setConversionMessage("Choose a valid start time and duration.");
+      return;
+    }
+    try {
+      const result = await scheduleConsultation({
+        variables: {
+          input: {
+            leadId,
+            type: consultationType,
+            scheduledStart: new Date(start).toISOString(),
+            scheduledEnd,
+            notes: String(formData.get("notes") ?? ""),
+            ...(consultationType === "ON_SITE"
+              ? {
+                  addressLine1: String(formData.get("addressLine1") ?? ""),
+                  addressLine2: String(formData.get("addressLine2") ?? ""),
+                  city: String(formData.get("city") ?? ""),
+                  state: String(formData.get("state") ?? ""),
+                  postalCode: String(formData.get("postalCode") ?? ""),
+                }
+              : {}),
+          },
+        },
+      });
+      const id = result.data?.scheduleLeadConsultation.id;
+      if (!id) throw new Error("Consultation was not returned.");
+      await refetch();
+    } catch (error) {
+      setConversionMessage(
+        error instanceof Error ? error.message : "Consultation could not be scheduled.",
+      );
     }
   }
 
@@ -192,10 +236,16 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
             {lead.internalNotes.length ? (
               lead.internalNotes.map((note) => (
                 <article key={note.id} className="rounded-lg bg-[#f7f8f4] p-4">
-                  <p className="whitespace-pre-wrap">{note.content}</p>
+                  <div className="flex items-start justify-between gap-4">
+                    <p className="whitespace-pre-wrap">{note.content}</p>
+                    {note.content === "Consultation cancelled." ? (
+                      <span className="shrink-0 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800">
+                        Consultation cancelled
+                      </span>
+                    ) : null}
+                  </div>
                   <p className="mt-3 text-xs text-[#66736a]">
-                    {note.author.name ?? note.author.email}
-                    {date(note.createdAt)}
+                    {note.author.name ?? note.author.email} · {date(note.createdAt)}
                   </p>
                 </article>
               ))
@@ -242,32 +292,153 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
               This lead now has a customer and property record.
             </p>
             <Link
-              href={`/admin/customers/${lead.convertedCustomer.id}#properties`}
+              href={`/admin/customers/${lead.convertedCustomer.id}`}
               className="mt-4 block w-full rounded-lg bg-emerald-700 px-4 py-2 text-center font-semibold text-white hover:bg-emerald-800"
             >
-              Properties
+              View Customer
+            </Link>
+            <Link
+              href={`/admin/customers/${lead.convertedCustomer.id}#properties`}
+              className="mt-3 block text-center text-sm font-semibold text-emerald-800 hover:underline"
+            >
+              View Properties
+            </Link>
+          </div>
+        ) : activeConsultation ? (
+          <div className="rounded-xl border border-[#b7d36b] bg-white p-6">
+            <h2 className="font-semibold text-[#173f32]">Upcoming consultation</h2>
+            <p className="mt-2 text-sm text-[#5b685f]">
+              {activeConsultation.type.replaceAll("_", " ")} ·{" "}
+              {date(activeConsultation.scheduledStart)} · {activeConsultation.status}
+            </p>
+            <Link
+              href={`/admin/consultations/${activeConsultation.id}`}
+              className="mt-4 block rounded-lg bg-[#476654] px-4 py-2 text-center font-semibold text-white"
+            >
+              View Consultation
+            </Link>
+            <Link
+              href={`/admin/consultations/${activeConsultation.id}`}
+              className="mt-3 block text-center text-sm font-semibold text-[#476654] hover:underline"
+            >
+              Reschedule or cancel
             </Link>
           </div>
         ) : canEdit ? (
           <form
-            action={submitConversion}
+            action={submitConsultation}
             className="rounded-xl border border-[#b7d36b] bg-white p-6"
           >
-            <h2 className="font-semibold text-[#173f32]">Qualified lead?</h2>
+            <h2 className="font-semibold text-[#173f32]">Next step</h2>
             <p className="mt-2 text-sm text-[#5b685f]">
-              Create a customer and their first property from this lead.
+              {completedConsultation
+                ? "The consultation is complete. Schedule a follow-up or update the lead status."
+                : "Schedule a consultation to learn more about the property and requested work."}
             </p>
+            <label className="mt-4 block text-sm font-semibold">
+              Type
+              <select
+                value={consultationType}
+                onChange={(event) => setConsultationType(event.target.value as "ON_SITE" | "PHONE")}
+                className="mt-2 w-full rounded-lg border p-2"
+              >
+                <option value="ON_SITE">On-site consultation</option>
+                <option value="PHONE">Phone consultation</option>
+              </select>
+            </label>
+            <label className="mt-3 block text-sm font-semibold">
+              Start
+              <input
+                name="scheduledStart"
+                type="datetime-local"
+                required
+                className="mt-2 w-full rounded-lg border p-2"
+              />
+            </label>
+            <label className="mt-3 block text-sm font-semibold">
+              Duration
+              <select
+                name="duration"
+                defaultValue="60"
+                className="mt-2 w-full rounded-lg border p-2"
+              >
+                {consultationDurations.map((minutes) => (
+                  <option key={minutes} value={minutes}>
+                    {minutes} minutes
+                  </option>
+                ))}
+              </select>
+            </label>
+            {consultationType === "ON_SITE" ? (
+              <div className="mt-3 grid gap-2">
+                <input
+                  name="addressLine1"
+                  required
+                  defaultValue={lead.addressLine1}
+                  aria-label="Address line 1"
+                  className="rounded-lg border p-2"
+                />
+                <input
+                  name="addressLine2"
+                  defaultValue={lead.addressLine2 ?? ""}
+                  aria-label="Address line 2"
+                  className="rounded-lg border p-2"
+                />
+                <input
+                  name="city"
+                  required
+                  defaultValue={lead.city}
+                  aria-label="City"
+                  className="rounded-lg border p-2"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    name="state"
+                    required
+                    defaultValue={lead.state}
+                    aria-label="State"
+                    className="rounded-lg border p-2"
+                  />
+                  <input
+                    name="postalCode"
+                    required
+                    defaultValue={lead.postalCode}
+                    aria-label="Postal code"
+                    className="rounded-lg border p-2"
+                  />
+                </div>
+              </div>
+            ) : null}
+            <label className="mt-3 block text-sm font-semibold">
+              Purpose or notes
+              <textarea
+                name="notes"
+                defaultValue={lead.notes ?? ""}
+                rows={3}
+                className="mt-2 w-full rounded-lg border p-2"
+              />
+            </label>
             <button
-              disabled={convertResult.loading}
+              disabled={scheduleResult.loading}
               className="mt-4 w-full rounded-lg bg-[#476654] px-4 py-2 font-semibold text-white disabled:opacity-60"
             >
-              {convertResult.loading ? "Converting…" : "Convert to Customer"}
+              {scheduleResult.loading ? "Scheduling…" : "Schedule Consultation"}
             </button>
             {conversionMessage ? (
               <p role="alert" className="mt-2 text-sm">
                 {conversionMessage}
               </p>
             ) : null}
+          </form>
+        ) : null}
+        {!lead.convertedCustomer && canEdit ? (
+          <form action={submitConversion} className="text-center">
+            <button
+              disabled={convertResult.loading}
+              className="text-sm font-semibold text-[#5b685f] hover:underline"
+            >
+              {convertResult.loading ? "Converting…" : "Convert manually"}
+            </button>
           </form>
         ) : null}
         {canEdit && lead.status !== "CONVERTED" ? (

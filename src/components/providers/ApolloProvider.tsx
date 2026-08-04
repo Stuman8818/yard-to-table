@@ -19,7 +19,17 @@ function getGraphQLUrl(): string {
 
 function makeClient() {
   return new ApolloClient({
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({
+      typePolicies: {
+        Lead: {
+          fields: {
+            consultations: {
+              merge: false,
+            },
+          },
+        },
+      },
+    }),
     link: new HttpLink({
       uri: getGraphQLUrl(),
     }),

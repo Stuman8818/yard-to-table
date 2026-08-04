@@ -127,7 +127,15 @@ Owners and administrators can convert a tenant-scoped lead into a customer and f
 
 Customers and properties each have required organization ownership. Composite foreign keys ensure a customer cannot originate from another organization's lead and a property cannot belong to another organization's customer. Customer retrieval always uses both the requested ID and the authenticated membership's organization ID. Managers retain read-only access; crew members cannot access lead or customer administration.
 
-This phase does not include customer or property editing, a multiple-property creation UI, scheduling, estimates, jobs, billing, or a customer portal.
+This phase does not include customer or property editing, a multiple-property creation UI, estimates, jobs, billing, or a customer portal.
+
+### Consultations
+
+Owners and administrators can schedule a consultation for one of a customer's tenant-owned properties, then reschedule it, update its notes, or move it through `SCHEDULED`, `COMPLETED`, `CANCELED`, and `NO_SHOW`. Managers have read-only access and crew members are denied. Upcoming, past, and complete history views retain completed and canceled appointments.
+
+Consultations belong independently to the organization, customer, and property, with composite PostgreSQL foreign keys preventing cross-tenant or mismatched customer/property records. The authenticated user is recorded as creator; client requests cannot choose organization, creator, or role. Consultations remain separate from jobs because an appointment can be canceled, missed, or completed without becoming contracted work.
+
+This phase intentionally excludes property assessments, estimates, jobs, calendar integrations, notifications, and recurring appointments.
 
 ## Project Structure
 
