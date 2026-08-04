@@ -11,13 +11,17 @@ import { createLead, LeadValidationError } from "@/server/leads/lead-service";
 import { customerIdSchema, convertLeadSchema } from "@/lib/validation/customer";
 import {
   consultationIdSchema,
+  completeConsultationSchema,
+  markConsultationLeadLostSchema,
   scheduleConsultationSchema,
   scheduleLeadConsultationSchema,
   updateConsultationSchema,
 } from "@/lib/validation/consultation";
 import {
+  completeConsultationForOrganization,
   findConsultationForOrganization,
   findConsultationsForOrganization,
+  markConsultationLeadLost,
   scheduleConsultation,
   scheduleConsultationForLead,
   updateConsultationForOrganization,
@@ -154,8 +158,8 @@ export const resolvers = {
         });
       }
       const input = parsed.data;
-      if (input.status === "CONVERTED") {
-        throw new GraphQLError("Convert the lead through the conversion workflow.", {
+      if (input.status === "CONVERTED" || input.status === "CONSULTATION_COMPLETED") {
+        throw new GraphQLError("Use the dedicated workflow for this lead status.", {
           extensions: { code: "BAD_USER_INPUT" },
         });
       }
@@ -362,6 +366,66 @@ export const resolvers = {
       }
       return result.consultation;
     },
+    completeConsultation: async (
+      _parent: unknown,
+      { input }: { input: Record<string, unknown> },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireLeadEditAccess(context);
+      const userId = context.authenticatedUserId;
+      if (!userId)
+        throw new GraphQLError("Authentication is required.", {
+          extensions: { code: "UNAUTHENTICATED" },
+        });
+      const parsed = completeConsultationSchema.safeParse(input);
+      if (!parsed.success)
+        throw new GraphQLError(
+          parsed.error.issues[0]?.message ?? "Enter valid completion details.",
+          {
+            extensions: { code: "BAD_USER_INPUT" },
+          },
+        );
+      const result = await completeConsultationForOrganization(
+        context.prisma,
+        membership.organizationId,
+        userId,
+        parsed.data,
+      );
+      if (!result)
+        throw new GraphQLError("Scheduled consultation not found.", {
+          extensions: { code: "NOT_FOUND" },
+        });
+      return result.consultation;
+    },
+    markConsultationLeadLost: async (
+      _parent: unknown,
+      { input }: { input: Record<string, unknown> },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireLeadEditAccess(context);
+      const userId = context.authenticatedUserId;
+      if (!userId)
+        throw new GraphQLError("Authentication is required.", {
+          extensions: { code: "UNAUTHENTICATED" },
+        });
+      const parsed = markConsultationLeadLostSchema.safeParse(input);
+      if (!parsed.success)
+        throw new GraphQLError(parsed.error.issues[0]?.message ?? "Enter a loss reason.", {
+          extensions: { code: "BAD_USER_INPUT" },
+        });
+      const lead = await markConsultationLeadLost(
+        context.prisma,
+        membership.organizationId,
+        userId,
+        parsed.data.consultationId,
+        parsed.data.reason,
+      );
+      if (!lead)
+        throw new GraphQLError("Completed consultation not found.", {
+          extensions: { code: "NOT_FOUND" },
+        });
+      return lead;
+    },
   },
   Lead: {
     createdAt: (lead: Lead) => lead.createdAt.toISOString(),
@@ -384,5 +448,6 @@ export const resolvers = {
     scheduledEnd: (value: Consultation) => value.scheduledEnd.toISOString(),
     createdAt: (value: Consultation) => value.createdAt.toISOString(),
     updatedAt: (value: Consultation) => value.updatedAt.toISOString(),
+    completedAt: (value: Consultation) => value.completedAt?.toISOString() ?? null,
   },
 };

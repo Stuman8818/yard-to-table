@@ -9,6 +9,7 @@ const leadStatuses = [
   "NEW",
   "CONTACTED",
   "CONSULTATION_SCHEDULED",
+  "CONSULTATION_COMPLETED",
   "ESTIMATE_SENT",
   "CONVERTED",
   "LOST",
