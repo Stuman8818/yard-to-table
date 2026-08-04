@@ -1,0 +1,105 @@
+query AssessmentContext($consultationId: ID!) {
+  assessmentContext(consultationId: $consultationId) {
+    lead {
+      id
+      firstName
+      lastName
+      email
+      phone
+      requestedServices {
+        id
+        serviceType
+      }
+    }
+    property {
+      id
+      addressLine1
+      addressLine2
+      city
+      state
+      postalCode
+    }
+    consultation {
+      id
+      scheduledStart
+      completedAt
+      completionNotes
+      outcome
+    }
+    assessment {
+      id
+      status
+    }
+  }
+}
+
+query AssessmentDetails($id: ID!) {
+  assessment(id: $id) {
+    id
+    status
+    requestedWork
+    generalNotes
+    accessDifficulty
+    estimatedLaborHours
+    recommendedCrewSize
+    materialsNeeded
+    equipmentNeeded
+    disposalNeeded
+    createdAt
+    updatedAt
+    completedAt
+    lead {
+      id
+      firstName
+      lastName
+      email
+      phone
+      requestedServices {
+        id
+        serviceType
+      }
+    }
+    consultation {
+      id
+      scheduledStart
+      completedAt
+      completionNotes
+      outcome
+    }
+    property {
+      id
+      addressLine1
+      addressLine2
+      city
+      state
+      postalCode
+    }
+    createdBy {
+      name
+      email
+    }
+  }
+}
+
+mutation CreatePropertyAssessment($input: CreatePropertyAssessmentInput!) {
+  createPropertyAssessment(input: $input) {
+    id
+    status
+  }
+}
+
+mutation UpdatePropertyAssessment($input: UpdatePropertyAssessmentInput!) {
+  updatePropertyAssessment(input: $input) {
+    id
+    status
+    updatedAt
+  }
+}
+
+mutation CompletePropertyAssessment($assessmentId: ID!) {
+  completePropertyAssessment(assessmentId: $assessmentId) {
+    id
+    status
+    completedAt
+  }
+}

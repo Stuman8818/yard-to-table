@@ -11,6 +11,7 @@ enum LeadStatus {
   CONTACTED
   CONSULTATION_SCHEDULED
   CONSULTATION_COMPLETED
+  ASSESSMENT_COMPLETED
   ESTIMATE_SENT
   CONVERTED
   LOST
@@ -52,6 +53,13 @@ enum ConsultationOutcome {
   CUSTOMER_NOT_INTERESTED
 }
 
+enum PropertyAssessmentStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
 model Lead {
   id                     String      @id @default(cuid())
   firstName              String
@@ -71,12 +79,13 @@ model Lead {
   updatedAt              DateTime    @updatedAt
   organizationId         String
 
-  organization      Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  organization      Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   internalNotes     LeadNote[]
   requestedServices LeadService[]
-  convertedCustomer Customer?      @relation("LeadConversion")
+  convertedCustomer Customer?            @relation("LeadConversion")
   properties        Property[]
   consultations     Consultation[]
+  assessments       PropertyAssessment[]
 
   @@unique([id, organizationId])
   @@index([organizationId])
@@ -97,6 +106,7 @@ model Organization {
   customers     Customer[]
   properties    Property[]
   consultations Consultation[]
+  assessments   PropertyAssessment[]
 }
 
 model User {
@@ -112,6 +122,7 @@ model User {
   consultationsCreated   Consultation[]
   consultationsAssigned  Consultation[]           @relation("ConsultationAssignee")
   consultationsCompleted Consultation[]           @relation("ConsultationCompleter")
+  assessmentsCreated     PropertyAssessment[]
 }
 
 model OrganizationMembership {
@@ -192,10 +203,11 @@ model Property {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  customer      Customer?      @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Cascade)
-  lead          Lead?          @relation(fields: [leadId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  organization  Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  customer      Customer?            @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  lead          Lead?                @relation(fields: [leadId, organizationId], references: [id, organizationId], onDelete: Restrict)
   consultations Consultation[]
+  assessments   PropertyAssessment[]
 
   @@unique([id, organizationId])
   @@index([organizationId, createdAt])
@@ -223,14 +235,16 @@ model Consultation {
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  lead         Lead?        @relation(fields: [leadId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  customer     Customer?    @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  property     Property?    @relation(fields: [propertyId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  createdBy    User         @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
-  assignedUser User?        @relation("ConsultationAssignee", fields: [assignedUserId], references: [id], onDelete: Restrict)
-  completedBy  User?        @relation("ConsultationCompleter", fields: [completedByUserId], references: [id], onDelete: Restrict)
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  lead         Lead?               @relation(fields: [leadId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  customer     Customer?           @relation(fields: [customerId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  property     Property?           @relation(fields: [propertyId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  createdBy    User                @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
+  assignedUser User?               @relation("ConsultationAssignee", fields: [assignedUserId], references: [id], onDelete: Restrict)
+  completedBy  User?               @relation("ConsultationCompleter", fields: [completedByUserId], references: [id], onDelete: Restrict)
+  assessment   PropertyAssessment?
 
+  @@unique([id, organizationId])
   @@index([organizationId, scheduledStart])
   @@index([customerId, scheduledStart])
   @@index([propertyId, scheduledStart])
@@ -238,4 +252,38 @@ model Consultation {
   @@index([leadId, scheduledStart])
   @@index([assignedUserId])
   @@index([completedByUserId])
+}
+
+model PropertyAssessment {
+  id                  String                   @id @default(cuid())
+  organizationId      String
+  leadId              String
+  consultationId      String                   @unique
+  propertyId          String
+  createdByUserId     String
+  status              PropertyAssessmentStatus @default(DRAFT)
+  requestedWork       String?
+  generalNotes        String?
+  accessDifficulty    String?
+  estimatedLaborHours Float?
+  recommendedCrewSize Int?
+  materialsNeeded     String?
+  equipmentNeeded     String?
+  disposalNeeded      String?
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  completedAt         DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  lead         Lead         @relation(fields: [leadId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  consultation Consultation @relation(fields: [consultationId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  property     Property     @relation(fields: [propertyId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  createdBy    User         @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@unique([id, organizationId])
+  @@unique([consultationId, organizationId])
+  @@index([organizationId, createdAt])
+  @@index([leadId])
+  @@index([propertyId])
+  @@index([createdByUserId])
 }

@@ -37,7 +37,10 @@ export function findLeadForOrganization(
       convertedCustomer: { select: { id: true } },
       consultations: {
         where: { status: { in: ["SCHEDULED", "COMPLETED"] } },
-        include: { assignedUser: { select: { name: true, email: true } } },
+        include: {
+          assignedUser: { select: { name: true, email: true } },
+          assessment: { select: { id: true, status: true } },
+        },
         orderBy: { scheduledStart: "desc" },
       },
       internalNotes: {
