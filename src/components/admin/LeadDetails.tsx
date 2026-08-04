@@ -13,6 +13,7 @@ import {
   UpdateLeadStatusDocument,
   type LeadStatus,
 } from "@/graphql/generated/graphql";
+import { propertyAssessmentCardState } from "@/lib/property-assessment-card";
 
 const leadStatuses = [
   "NEW",
@@ -50,6 +51,12 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
   const lead = data.lead;
   const activeConsultation = lead.consultations.find((item) => item.status === "SCHEDULED");
   const completedConsultation = lead.consultations.find((item) => item.status === "COMPLETED");
+  const assessmentCard = propertyAssessmentCardState(
+    completedConsultation?.outcome,
+    completedConsultation?.assessment,
+  );
+  const assessmentCompleted =
+    assessmentCard?.kind === "VIEW" && assessmentCard.assessment.status === "COMPLETED";
   const date = (value: string) =>
     new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(
       new Date(value),
@@ -311,6 +318,57 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
             </Link>
           </div>
         ) : null}
+        {completedConsultation && assessmentCard ? (
+          <div
+            className={
+              assessmentCompleted
+                ? "rounded-xl border border-emerald-300 bg-emerald-50 p-6"
+                : "rounded-xl border border-[#b7d36b] bg-white p-6"
+            }
+          >
+            {assessmentCard.kind === "VIEW" ? (
+              <>
+                <h2
+                  className={`font-semibold ${assessmentCompleted ? "text-emerald-950" : "text-[#173f32]"}`}
+                >
+                  Property assessment
+                </h2>
+                <p
+                  className={`mt-2 text-sm ${assessmentCompleted ? "text-emerald-800" : "text-[#5b685f]"}`}
+                >
+                  Status: {assessmentCard.assessment.status.replaceAll("_", " ")}
+                </p>
+                <Link
+                  href={`/admin/assessments/${assessmentCard.assessment.id}`}
+                  className={`mt-4 block rounded-lg px-4 py-2 text-center font-semibold text-white ${assessmentCompleted ? "bg-emerald-700 hover:bg-emerald-800" : "bg-[#476654]"}`}
+                >
+                  View Assessment
+                </Link>
+                {assessmentCard.assessment.status === "COMPLETED" ? (
+                  <p className="mt-3 text-sm text-emerald-800">
+                    Assessment completed and ready for a future estimate workflow.
+                  </p>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <h2 className="font-semibold text-[#173f32]">Ready for property assessment</h2>
+                <p className="mt-2 text-sm text-[#5b685f]">
+                  Record the property conditions, measurements, labor needs, and materials required
+                  for this work.
+                </p>
+                {canEdit ? (
+                  <Link
+                    href={`/admin/assessments/new?consultationId=${completedConsultation.id}`}
+                    className="mt-4 block rounded-lg bg-[#476654] px-4 py-2 text-center font-semibold text-white"
+                  >
+                    Start Property Assessment
+                  </Link>
+                ) : null}
+              </>
+            )}
+          </div>
+        ) : null}
         {!lead.convertedCustomer && canEdit ? (
           <div className="text-center">
             <form action={submitConversion}>
@@ -328,7 +386,10 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
             ) : null}
           </div>
         ) : null}
-        {canEdit && lead.status !== "CONVERTED" && lead.status !== "CONSULTATION_COMPLETED" ? (
+        {canEdit &&
+        lead.status !== "CONVERTED" &&
+        lead.status !== "CONSULTATION_COMPLETED" &&
+        lead.status !== "ASSESSMENT_COMPLETED" ? (
           <form action={submitStatus} className="rounded-xl border border-[#d8ddd4] bg-white p-6">
             <label htmlFor="lead-status" className="block font-semibold">
               Lead status
@@ -357,7 +418,9 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
               </p>
             ) : null}
           </form>
-        ) : lead.status === "CONVERTED" || lead.status === "CONSULTATION_COMPLETED" ? (
+        ) : lead.status === "CONVERTED" ||
+          lead.status === "CONSULTATION_COMPLETED" ||
+          lead.status === "ASSESSMENT_COMPLETED" ? (
           <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-6 text-sm text-emerald-900">
             This status is managed by its dedicated workflow.
           </div>

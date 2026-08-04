@@ -6,6 +6,8 @@ export const typeDefs = `#graphql
     customer(id: ID!): Customer
     consultations(scope: ConsultationScope = UPCOMING): [Consultation!]!
     consultation(id: ID!): Consultation
+    assessment(id: ID!): PropertyAssessment
+    assessmentContext(consultationId: ID!): PropertyAssessmentContext
   }
 
   type Mutation {
@@ -19,6 +21,9 @@ export const typeDefs = `#graphql
     scheduleLeadConsultation(input: ScheduleLeadConsultationInput!): Consultation!
     completeConsultation(input: CompleteConsultationInput!): Consultation!
     markConsultationLeadLost(input: MarkConsultationLeadLostInput!): Lead!
+    createPropertyAssessment(input: CreatePropertyAssessmentInput!): PropertyAssessment!
+    updatePropertyAssessment(input: UpdatePropertyAssessmentInput!): PropertyAssessment!
+    completePropertyAssessment(assessmentId: ID!): PropertyAssessment!
   }
 
   input CreateLeadInput {
@@ -112,6 +117,7 @@ export const typeDefs = `#graphql
     assignedUser: LeadNoteAuthor
     completedAt: String
     completedBy: LeadNoteAuthor
+    assessment: PropertyAssessment
     completionNotes: String
     actualDuration: Int
     outcome: ConsultationOutcome
@@ -127,6 +133,55 @@ export const typeDefs = `#graphql
   enum ConsultationType { ON_SITE PHONE }
   enum ConsultationOutcome { ASSESSMENT_NEEDED READY_FOR_ESTIMATE FOLLOW_UP_NEEDED NOT_A_GOOD_FIT CUSTOMER_NOT_INTERESTED }
   enum ConsultationScope { UPCOMING PAST ALL }
+
+  type PropertyAssessment {
+    id: ID!
+    status: PropertyAssessmentStatus!
+    requestedWork: String
+    generalNotes: String
+    accessDifficulty: String
+    estimatedLaborHours: Float
+    recommendedCrewSize: Int
+    materialsNeeded: String
+    equipmentNeeded: String
+    disposalNeeded: String
+    createdAt: String!
+    updatedAt: String!
+    completedAt: String
+    lead: Lead!
+    consultation: Consultation!
+    property: Property!
+    createdBy: LeadNoteAuthor!
+  }
+  type PropertyAssessmentContext {
+    consultation: Consultation!
+    lead: Lead!
+    property: Property!
+    assessment: PropertyAssessment
+  }
+  input CreatePropertyAssessmentInput {
+    consultationId: ID!
+    requestedWork: String
+    generalNotes: String
+    accessDifficulty: String
+    estimatedLaborHours: Float
+    recommendedCrewSize: Int
+    materialsNeeded: String
+    equipmentNeeded: String
+    disposalNeeded: String
+  }
+  input UpdatePropertyAssessmentInput {
+    assessmentId: ID!
+    requestedWork: String
+    generalNotes: String
+    accessDifficulty: String
+    estimatedLaborHours: Float
+    recommendedCrewSize: Int
+    materialsNeeded: String
+    equipmentNeeded: String
+    disposalNeeded: String
+  }
+  enum PropertyAssessmentStatus { DRAFT IN_PROGRESS COMPLETED CANCELLED }
 
   type LeadNote {
     id: ID!
@@ -152,6 +207,7 @@ export const typeDefs = `#graphql
     CONTACTED
     CONSULTATION_SCHEDULED
     CONSULTATION_COMPLETED
+    ASSESSMENT_COMPLETED
     ESTIMATE_SENT
     CONVERTED
     LOST

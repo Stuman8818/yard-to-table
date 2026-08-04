@@ -1,4 +1,12 @@
-import type { Consultation, Customer, Lead, LeadNote, LeadStatus, Property } from "@prisma/client";
+import type {
+  Consultation,
+  Customer,
+  Lead,
+  LeadNote,
+  LeadStatus,
+  Property,
+  PropertyAssessment,
+} from "@prisma/client";
 import { GraphQLError } from "graphql";
 
 import type { CreateLeadInput } from "@/graphql/generated/graphql";
@@ -40,6 +48,19 @@ import {
   updateLeadStatusForOrganization,
 } from "@/server/leads/lead-repository";
 import { resolveCurrentOrganization } from "@/server/organizations/organization-service";
+import {
+  assessmentIdSchema,
+  completeAssessmentSchema,
+  createAssessmentSchema,
+  updateAssessmentSchema,
+} from "@/lib/validation/property-assessment";
+import {
+  completeAssessmentForOrganization,
+  createAssessmentForConsultation,
+  findAssessmentContextForOrganization,
+  findAssessmentForOrganization,
+  updateAssessmentForOrganization,
+} from "@/server/assessments/assessment-repository";
 import { requireAdminLeadAccess, requireLeadEditAccess } from "./authorization";
 import type { GraphQLContext } from "./context";
 
@@ -142,6 +163,35 @@ export const resolvers = {
         parsed.data,
       );
     },
+    assessment: (_parent: unknown, { id }: { id: string }, context: GraphQLContext) => {
+      const membership = requireAdminLeadAccess(context);
+      const parsed = assessmentIdSchema.safeParse(id);
+      if (!parsed.success) return null;
+      return findAssessmentForOrganization(context.prisma, membership.organizationId, parsed.data);
+    },
+    assessmentContext: (
+      _parent: unknown,
+      { consultationId }: { consultationId: string },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireAdminLeadAccess(context);
+      const parsed = assessmentIdSchema.safeParse(consultationId);
+      if (!parsed.success) return null;
+      return findAssessmentContextForOrganization(
+        context.prisma,
+        membership.organizationId,
+        parsed.data,
+      ).then((consultation) =>
+        consultation?.lead && consultation.property
+          ? {
+              consultation,
+              lead: consultation.lead,
+              property: consultation.property,
+              assessment: consultation.assessment,
+            }
+          : null,
+      );
+    },
   },
   Mutation: {
     createLead: createLeadResolver,
@@ -158,7 +208,11 @@ export const resolvers = {
         });
       }
       const input = parsed.data;
-      if (input.status === "CONVERTED" || input.status === "CONSULTATION_COMPLETED") {
+      if (
+        input.status === "CONVERTED" ||
+        input.status === "CONSULTATION_COMPLETED" ||
+        input.status === "ASSESSMENT_COMPLETED"
+      ) {
         throw new GraphQLError("Use the dedicated workflow for this lead status.", {
           extensions: { code: "BAD_USER_INPUT" },
         });
@@ -426,6 +480,88 @@ export const resolvers = {
         });
       return lead;
     },
+    createPropertyAssessment: async (
+      _parent: unknown,
+      { input }: { input: Record<string, unknown> },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireLeadEditAccess(context);
+      const userId = context.authenticatedUserId;
+      if (!userId) throw new GraphQLError("Authentication is required.");
+      const parsed = createAssessmentSchema.safeParse(input);
+      if (!parsed.success)
+        throw new GraphQLError(
+          parsed.error.issues[0]?.message ?? "Enter valid assessment details.",
+          {
+            extensions: { code: "BAD_USER_INPUT" },
+          },
+        );
+      const { consultationId, ...fields } = parsed.data;
+      const result = await createAssessmentForConsultation(
+        context.prisma,
+        membership.organizationId,
+        userId,
+        consultationId,
+        fields,
+      );
+      if (!result)
+        throw new GraphQLError("Eligible consultation and property not found.", {
+          extensions: { code: "NOT_FOUND" },
+        });
+      return result.assessment;
+    },
+    updatePropertyAssessment: async (
+      _parent: unknown,
+      { input }: { input: Record<string, unknown> },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireLeadEditAccess(context);
+      const userId = context.authenticatedUserId;
+      if (!userId) throw new GraphQLError("Authentication is required.");
+      const parsed = updateAssessmentSchema.safeParse(input);
+      if (!parsed.success)
+        throw new GraphQLError(
+          parsed.error.issues[0]?.message ?? "Enter valid assessment details.",
+          {
+            extensions: { code: "BAD_USER_INPUT" },
+          },
+        );
+      const { assessmentId, ...fields } = parsed.data;
+      const assessment = await updateAssessmentForOrganization(
+        context.prisma,
+        membership.organizationId,
+        userId,
+        assessmentId,
+        fields,
+      );
+      if (!assessment)
+        throw new GraphQLError("Editable assessment not found.", {
+          extensions: { code: "NOT_FOUND" },
+        });
+      return assessment;
+    },
+    completePropertyAssessment: async (
+      _parent: unknown,
+      { assessmentId }: { assessmentId: string },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireLeadEditAccess(context);
+      const userId = context.authenticatedUserId;
+      if (!userId) throw new GraphQLError("Authentication is required.");
+      const parsed = completeAssessmentSchema.safeParse({ assessmentId });
+      if (!parsed.success) throw new GraphQLError("Choose a valid assessment.");
+      const assessment = await completeAssessmentForOrganization(
+        context.prisma,
+        membership.organizationId,
+        userId,
+        parsed.data.assessmentId,
+      );
+      if (!assessment)
+        throw new GraphQLError("Add requested work before completing the assessment.", {
+          extensions: { code: "BAD_USER_INPUT" },
+        });
+      return assessment;
+    },
   },
   Lead: {
     createdAt: (lead: Lead) => lead.createdAt.toISOString(),
@@ -449,5 +585,10 @@ export const resolvers = {
     createdAt: (value: Consultation) => value.createdAt.toISOString(),
     updatedAt: (value: Consultation) => value.updatedAt.toISOString(),
     completedAt: (value: Consultation) => value.completedAt?.toISOString() ?? null,
+  },
+  PropertyAssessment: {
+    createdAt: (value: PropertyAssessment) => value.createdAt.toISOString(),
+    updatedAt: (value: PropertyAssessment) => value.updatedAt.toISOString(),
+    completedAt: (value: PropertyAssessment) => value.completedAt?.toISOString() ?? null,
   },
 };

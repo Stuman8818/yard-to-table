@@ -135,6 +135,8 @@ Owners and administrators can schedule consultations directly from a lead. Sched
 
 Consultations belong independently to the organization, customer, and property, with composite PostgreSQL foreign keys preventing cross-tenant or mismatched customer/property records. The authenticated user is recorded as creator; client requests cannot choose organization, creator, or role. Consultations remain separate from jobs because an appointment can be canceled, missed, or completed without becoming contracted work.
 
+Completed consultations with an `ASSESSMENT_NEEDED` outcome can launch a tenant-scoped property assessment. Assessments support draft editing and explicit completion, retain their lead, consultation, and property context, and remain separate from future estimate, customer-conversion, and job workflows.
+
 This phase intentionally excludes property assessments, estimates, jobs, calendar integrations, notifications, and recurring appointments.
 
 ## Project Structure
