@@ -57,6 +57,8 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
   );
   const assessmentCompleted =
     assessmentCard?.kind === "VIEW" && assessmentCard.assessment.status === "COMPLETED";
+  const estimateEligible =
+    assessmentCompleted || completedConsultation?.outcome === "READY_FOR_ESTIMATE";
   const date = (value: string) =>
     new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(
       new Date(value),
@@ -369,6 +371,43 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
             )}
           </div>
         ) : null}
+        {lead.estimate || estimateEligible ? (
+          <div
+            className={
+              lead.estimate?.status === "COMPLETED"
+                ? "rounded-xl border border-emerald-300 bg-emerald-50 p-6"
+                : "rounded-xl border border-[#b7d36b] bg-white p-6"
+            }
+          >
+            <h2
+              className={`font-semibold ${lead.estimate?.status === "COMPLETED" ? "text-emerald-950" : "text-[#173f32]"}`}
+            >
+              Estimate
+            </h2>
+            <p
+              className={`mt-2 text-sm ${lead.estimate?.status === "COMPLETED" ? "text-emerald-800" : "text-[#5b685f]"}`}
+            >
+              {lead.estimate
+                ? `Status: ${lead.estimate.status}`
+                : "Create a service breakdown and price the proposed landscaping work."}
+            </p>
+            {lead.estimate ? (
+              <Link
+                href={`/admin/estimates/${lead.estimate.id}`}
+                className={`mt-4 block rounded-lg px-4 py-2 text-center font-semibold text-white ${lead.estimate.status === "COMPLETED" ? "bg-emerald-700 hover:bg-emerald-800" : "bg-[#476654]"}`}
+              >
+                View Estimate
+              </Link>
+            ) : canEdit ? (
+              <Link
+                href={`/admin/estimates/new?leadId=${lead.id}`}
+                className="mt-4 block rounded-lg bg-[#476654] px-4 py-2 text-center font-semibold text-white"
+              >
+                Start Estimate
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
         {!lead.convertedCustomer && canEdit ? (
           <div className="text-center">
             <form action={submitConversion}>
@@ -389,7 +428,8 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
         {canEdit &&
         lead.status !== "CONVERTED" &&
         lead.status !== "CONSULTATION_COMPLETED" &&
-        lead.status !== "ASSESSMENT_COMPLETED" ? (
+        lead.status !== "ASSESSMENT_COMPLETED" &&
+        lead.status !== "ESTIMATE_COMPLETED" ? (
           <form action={submitStatus} className="rounded-xl border border-[#d8ddd4] bg-white p-6">
             <label htmlFor="lead-status" className="block font-semibold">
               Lead status
@@ -420,7 +460,8 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
           </form>
         ) : lead.status === "CONVERTED" ||
           lead.status === "CONSULTATION_COMPLETED" ||
-          lead.status === "ASSESSMENT_COMPLETED" ? (
+          lead.status === "ASSESSMENT_COMPLETED" ||
+          lead.status === "ESTIMATE_COMPLETED" ? (
           <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-6 text-sm text-emerald-900">
             This status is managed by its dedicated workflow.
           </div>

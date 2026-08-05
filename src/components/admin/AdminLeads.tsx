@@ -12,6 +12,7 @@ const leadStatuses = [
   "CONSULTATION_COMPLETED",
   "ASSESSMENT_COMPLETED",
   "ESTIMATE_SENT",
+  "ESTIMATE_COMPLETED",
   "CONVERTED",
   "LOST",
 ] as const satisfies readonly LeadStatus[];

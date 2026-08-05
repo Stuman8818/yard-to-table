@@ -1,0 +1,101 @@
+query EstimateContext($leadId: ID!) {
+  estimateContext(leadId: $leadId) {
+    lead {
+      id
+      firstName
+      lastName
+      email
+      phone
+      requestedServices {
+        id
+        serviceType
+      }
+    }
+    consultation {
+      id
+      scheduledStart
+      outcome
+    }
+    assessment {
+      id
+      status
+      requestedWork
+      generalNotes
+      materialsNeeded
+      equipmentNeeded
+    }
+    estimate {
+      id
+      status
+      totalCents
+    }
+  }
+}
+
+query EstimateDetails($id: ID!) {
+  estimate(id: $id) {
+    id
+    status
+    details
+    notes
+    totalCents
+    createdAt
+    updatedAt
+    completedAt
+    lead {
+      id
+      firstName
+      lastName
+      email
+      phone
+      requestedServices {
+        id
+        serviceType
+      }
+    }
+    consultation {
+      id
+      scheduledStart
+      outcome
+    }
+    assessment {
+      id
+      status
+      requestedWork
+    }
+    lineItems {
+      id
+      description
+      quantity
+      unitPriceCents
+      totalCents
+    }
+    createdBy {
+      name
+      email
+    }
+  }
+}
+
+mutation CreateEstimate($input: CreateEstimateInput!) {
+  createEstimate(input: $input) {
+    id
+    status
+  }
+}
+mutation UpdateEstimate($input: UpdateEstimateInput!) {
+  updateEstimate(input: $input) {
+    id
+    status
+    totalCents
+    updatedAt
+  }
+}
+mutation CompleteEstimate($estimateId: ID!) {
+  completeEstimate(estimateId: $estimateId) {
+    id
+    status
+    totalCents
+    completedAt
+  }
+}

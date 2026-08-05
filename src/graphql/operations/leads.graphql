@@ -48,6 +48,11 @@ query LeadDetails($id: ID!) {
     convertedCustomer {
       id
     }
+    estimate {
+      id
+      status
+      totalCents
+    }
     consultations {
       id
       type

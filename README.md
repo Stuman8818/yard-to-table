@@ -137,6 +137,8 @@ Consultations belong independently to the organization, customer, and property, 
 
 Completed consultations with an `ASSESSMENT_NEEDED` outcome can launch a tenant-scoped property assessment. Assessments support draft editing and explicit completion, retain their lead, consultation, and property context, and remain separate from future estimate, customer-conversion, and job workflows.
 
+Leads with a completed assessment, or a completed consultation marked `READY_FOR_ESTIMATE`, can create one tenant-scoped estimate. Estimates support draft notes and service line items, server-calculated totals, and explicit completion without automatically converting the lead or creating a job.
+
 This phase intentionally excludes property assessments, estimates, jobs, calendar integrations, notifications, and recurring appointments.
 
 ## Project Structure

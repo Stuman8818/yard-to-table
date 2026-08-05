@@ -6,6 +6,7 @@ import type {
   LeadStatus,
   Property,
   PropertyAssessment,
+  Estimate,
 } from "@prisma/client";
 import { GraphQLError } from "graphql";
 
@@ -63,6 +64,18 @@ import {
 } from "@/server/assessments/assessment-repository";
 import { requireAdminLeadAccess, requireLeadEditAccess } from "./authorization";
 import type { GraphQLContext } from "./context";
+import {
+  createEstimateSchema,
+  estimateIdSchema,
+  updateEstimateSchema,
+} from "@/lib/validation/estimate";
+import {
+  completeEstimateForOrganization,
+  createEstimateForLead,
+  findEstimateContextForOrganization,
+  findEstimateForOrganization,
+  updateEstimateForOrganization,
+} from "@/server/estimates/estimate-repository";
 
 const genericLeadError = "We couldn’t submit your request. Please try again.";
 
@@ -192,6 +205,34 @@ export const resolvers = {
           : null,
       );
     },
+    estimate: (_parent: unknown, { id }: { id: string }, context: GraphQLContext) => {
+      const membership = requireAdminLeadAccess(context);
+      const parsed = estimateIdSchema.safeParse(id);
+      return parsed.success
+        ? findEstimateForOrganization(context.prisma, membership.organizationId, parsed.data)
+        : null;
+    },
+    estimateContext: async (
+      _parent: unknown,
+      { leadId }: { leadId: string },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireAdminLeadAccess(context);
+      const parsed = estimateIdSchema.safeParse(leadId);
+      if (!parsed.success) return null;
+      const lead = await findEstimateContextForOrganization(
+        context.prisma,
+        membership.organizationId,
+        parsed.data,
+      );
+      if (!lead) return null;
+      return {
+        lead,
+        consultation: lead.consultations[0] ?? null,
+        assessment: lead.assessments[0] ?? null,
+        estimate: lead.estimate,
+      };
+    },
   },
   Mutation: {
     createLead: createLeadResolver,
@@ -211,7 +252,8 @@ export const resolvers = {
       if (
         input.status === "CONVERTED" ||
         input.status === "CONSULTATION_COMPLETED" ||
-        input.status === "ASSESSMENT_COMPLETED"
+        input.status === "ASSESSMENT_COMPLETED" ||
+        input.status === "ESTIMATE_COMPLETED"
       ) {
         throw new GraphQLError("Use the dedicated workflow for this lead status.", {
           extensions: { code: "BAD_USER_INPUT" },
@@ -562,6 +604,81 @@ export const resolvers = {
         });
       return assessment;
     },
+    createEstimate: async (
+      _parent: unknown,
+      { input }: { input: Record<string, unknown> },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireLeadEditAccess(context);
+      const userId = context.authenticatedUserId;
+      if (!userId) throw new GraphQLError("Authentication is required.");
+      const parsed = createEstimateSchema.safeParse(input);
+      if (!parsed.success)
+        throw new GraphQLError(parsed.error.issues[0]?.message ?? "Enter valid estimate details.", {
+          extensions: { code: "BAD_USER_INPUT" },
+        });
+      const { leadId, ...fields } = parsed.data;
+      const result = await createEstimateForLead(
+        context.prisma,
+        membership.organizationId,
+        userId,
+        leadId,
+        fields,
+      );
+      if (!result)
+        throw new GraphQLError("Lead is not ready for an estimate.", {
+          extensions: { code: "BAD_USER_INPUT" },
+        });
+      return result.estimate;
+    },
+    updateEstimate: async (
+      _parent: unknown,
+      { input }: { input: Record<string, unknown> },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireLeadEditAccess(context);
+      const userId = context.authenticatedUserId;
+      if (!userId) throw new GraphQLError("Authentication is required.");
+      const parsed = updateEstimateSchema.safeParse(input);
+      if (!parsed.success)
+        throw new GraphQLError(parsed.error.issues[0]?.message ?? "Enter valid estimate details.", {
+          extensions: { code: "BAD_USER_INPUT" },
+        });
+      const { estimateId, ...fields } = parsed.data;
+      const estimate = await updateEstimateForOrganization(
+        context.prisma,
+        membership.organizationId,
+        userId,
+        estimateId,
+        fields,
+      );
+      if (!estimate)
+        throw new GraphQLError("Editable estimate not found.", {
+          extensions: { code: "NOT_FOUND" },
+        });
+      return estimate;
+    },
+    completeEstimate: async (
+      _parent: unknown,
+      { estimateId }: { estimateId: string },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireLeadEditAccess(context);
+      const userId = context.authenticatedUserId;
+      const parsed = estimateIdSchema.safeParse(estimateId);
+      if (!userId || !parsed.success) throw new GraphQLError("Choose a valid estimate.");
+      const estimate = await completeEstimateForOrganization(
+        context.prisma,
+        membership.organizationId,
+        userId,
+        parsed.data,
+      );
+      if (!estimate)
+        throw new GraphQLError("Add at least one line item before completing the estimate.", {
+          extensions: { code: "BAD_USER_INPUT" },
+        });
+      return estimate;
+    },
   },
   Lead: {
     createdAt: (lead: Lead) => lead.createdAt.toISOString(),
@@ -590,5 +707,10 @@ export const resolvers = {
     createdAt: (value: PropertyAssessment) => value.createdAt.toISOString(),
     updatedAt: (value: PropertyAssessment) => value.updatedAt.toISOString(),
     completedAt: (value: PropertyAssessment) => value.completedAt?.toISOString() ?? null,
+  },
+  Estimate: {
+    createdAt: (value: Estimate) => value.createdAt.toISOString(),
+    updatedAt: (value: Estimate) => value.updatedAt.toISOString(),
+    completedAt: (value: Estimate) => value.completedAt?.toISOString() ?? null,
   },
 };
