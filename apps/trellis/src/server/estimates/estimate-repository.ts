@@ -105,7 +105,6 @@ export async function createEstimateForLead(
     if (lead.estimate) return { estimate: lead.estimate, duplicate: true };
     const consultation = lead.consultations[0];
     const assessment = lead.assessments[0];
-    if (!assessment && consultation?.outcome !== "READY_FOR_ESTIMATE") return null;
     const items = calculatedItems(fields.lineItems);
     const estimate = await tx.estimate.create({
       data: {

@@ -14,6 +14,7 @@ import {
   type LeadStatus,
 } from "@/graphql/generated/graphql";
 import { propertyAssessmentCardState } from "@/lib/property-assessment-card";
+import { deriveLeadWorkflowStatus, leadWorkflowStatusLabel } from "@/lib/lead-workflow";
 
 const leadStatuses = [
   "NEW",
@@ -49,6 +50,7 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
       </div>
     );
   const lead = data.lead;
+  const workflowStatus = deriveLeadWorkflowStatus(lead);
   const activeConsultation = lead.consultations.find((item) => item.status === "SCHEDULED");
   const completedConsultation = lead.consultations.find((item) => item.status === "COMPLETED");
   const assessmentCard = propertyAssessmentCardState(
@@ -57,8 +59,7 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
   );
   const assessmentCompleted =
     assessmentCard?.kind === "VIEW" && assessmentCard.assessment.status === "COMPLETED";
-  const estimateEligible =
-    assessmentCompleted || completedConsultation?.outcome === "READY_FOR_ESTIMATE";
+  const showLegacyWorkflowCards: boolean = false;
   const date = (value: string) =>
     new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(
       new Date(value),
@@ -140,7 +141,7 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
               <p className="mt-2 text-[#5b685f]">Created {date(lead.createdAt)}</p>
             </div>
             <span className="rounded-full bg-[#edf1e9] px-3 py-1 text-sm font-semibold">
-              {lead.status.replaceAll("_", " ")}
+              {leadWorkflowStatusLabel(workflowStatus)}
             </span>
           </div>
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -223,104 +224,241 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
         </section>
       </div>
       <aside className="space-y-6">
-        {lead.convertedCustomer ? (
-          <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-6">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="font-semibold text-emerald-950">Customer converted</h2>
+        <WorkflowCard
+          title="Schedule consultation"
+          state={
+            completedConsultation ? "completed" : activeConsultation ? "active" : "not started"
+          }
+          description={
+            completedConsultation
+              ? "Consultation completed."
+              : activeConsultation
+                ? `${activeConsultation.type.replaceAll("_", " ")} · ${date(activeConsultation.scheduledStart)}`
+                : "Schedule time to learn more about the property and requested work."
+          }
+        >
+          {completedConsultation ? (
+            <WorkflowLink href={`/admin/consultations/${completedConsultation.id}`} completed>
+              View Consultation
+            </WorkflowLink>
+          ) : activeConsultation ? (
+            <WorkflowLink href={`/admin/consultations/${activeConsultation.id}`}>
+              View Consultation
+            </WorkflowLink>
+          ) : canEdit ? (
+            <WorkflowLink href={`/admin/leads/${lead.id}/consultation`}>
+              Schedule Consultation
+            </WorkflowLink>
+          ) : null}
+        </WorkflowCard>
+
+        <WorkflowCard
+          title="Property assessment"
+          state={
+            assessmentCompleted
+              ? "completed"
+              : assessmentCard?.kind === "VIEW"
+                ? "active"
+                : "not started"
+          }
+          description={
+            assessmentCard?.kind === "VIEW"
+              ? `Status: ${assessmentCard.assessment.status.replaceAll("_", " ")}`
+              : completedConsultation
+                ? "Record property conditions, labor, materials, and equipment."
+                : "Complete an on-site consultation first to establish the property record."
+          }
+        >
+          {assessmentCard?.kind === "VIEW" ? (
+            <WorkflowLink
+              href={`/admin/assessments/${assessmentCard.assessment.id}`}
+              completed={assessmentCompleted}
+            >
+              View Assessment
+            </WorkflowLink>
+          ) : completedConsultation && canEdit ? (
+            <WorkflowLink
+              href={`/admin/assessments/new?consultationId=${completedConsultation.id}`}
+            >
+              Start Property Assessment
+            </WorkflowLink>
+          ) : canEdit ? (
+            <WorkflowLink href={`/admin/leads/${lead.id}/consultation`}>
+              Set Up Property Visit
+            </WorkflowLink>
+          ) : null}
+        </WorkflowCard>
+
+        <WorkflowCard
+          title="Start estimate"
+          state={
+            lead.estimate?.status === "COMPLETED"
+              ? "completed"
+              : lead.estimate
+                ? "active"
+                : "not started"
+          }
+          description={
+            lead.estimate
+              ? `Status: ${lead.estimate.status}`
+              : "Create a service breakdown and price the proposed work at any time."
+          }
+        >
+          {lead.estimate ? (
+            <WorkflowLink
+              href={`/admin/estimates/${lead.estimate.id}`}
+              completed={lead.estimate.status === "COMPLETED"}
+            >
+              View Estimate
+            </WorkflowLink>
+          ) : canEdit ? (
+            <WorkflowLink href={`/admin/estimates/new?leadId=${lead.id}`}>
+              Start Estimate
+            </WorkflowLink>
+          ) : null}
+        </WorkflowCard>
+
+        <WorkflowCard
+          title="Convert to customer"
+          state={lead.convertedCustomer ? "completed" : "not started"}
+          description={
+            lead.convertedCustomer
+              ? "Customer and property records have been created."
+              : "Convert this lead whenever the customer is ready to move forward."
+          }
+        >
+          {lead.convertedCustomer ? (
+            <>
+              <WorkflowLink href={`/admin/customers/${lead.convertedCustomer.id}`} completed>
+                View Customer
+              </WorkflowLink>
               {canEdit ? (
-                <form action={submitUndoConversion}>
+                <form action={submitUndoConversion} className="mt-3 text-center">
                   <button
-                    type="submit"
                     disabled={undoResult.loading}
-                    aria-label="Undo customer conversion"
-                    title="Undo customer conversion"
-                    className="inline-flex size-9 items-center justify-center rounded-full border border-emerald-700 text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-50"
+                    className="text-sm font-semibold text-emerald-800 hover:underline"
                   >
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="size-5"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 7 4 12l5 5" />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M5 12h9a5 5 0 0 1 5 5"
-                      />
-                    </svg>
+                    Undo conversion
                   </button>
                 </form>
               ) : null}
-            </div>
-            <p className="mt-2 text-sm text-emerald-800">
-              This lead now has a customer and property record.
+            </>
+          ) : canEdit ? (
+            <form action={submitConversion}>
+              <button
+                disabled={convertResult.loading}
+                className="mt-4 w-full rounded-lg bg-[#476654] px-4 py-2 font-semibold text-white disabled:opacity-60"
+              >
+                {convertResult.loading ? "Converting..." : "Convert to Customer"}
+              </button>
+            </form>
+          ) : null}
+          {conversionMessage ? (
+            <p role="status" className="mt-2 text-sm">
+              {conversionMessage}
             </p>
-            <Link
-              href={`/admin/customers/${lead.convertedCustomer.id}`}
-              className="mt-4 block w-full rounded-lg bg-emerald-700 px-4 py-2 text-center font-semibold text-white hover:bg-emerald-800"
-            >
-              View Customer
-            </Link>
-            <Link
-              href={`/admin/customers/${lead.convertedCustomer.id}#properties`}
-              className="mt-3 block text-center text-sm font-semibold text-emerald-800 hover:underline"
-            >
-              View Properties
-            </Link>
-          </div>
-        ) : activeConsultation ? (
-          <div className="rounded-xl border border-[#b7d36b] bg-white p-6">
-            <h2 className="font-semibold text-[#173f32]">Upcoming consultation</h2>
-            <p className="mt-2 text-sm text-[#5b685f]">
-              {activeConsultation.type.replaceAll("_", " ")} ·{" "}
-              {date(activeConsultation.scheduledStart)} · {activeConsultation.status}
-            </p>
-            <Link
-              href={`/admin/consultations/${activeConsultation.id}`}
-              className="mt-4 block rounded-lg bg-[#476654] px-4 py-2 text-center font-semibold text-white"
-            >
-              View Consultation
-            </Link>
-            <Link
-              href={`/admin/consultations/${activeConsultation.id}`}
-              className="mt-3 block text-center text-sm font-semibold text-[#476654] hover:underline"
-            >
-              Reschedule or cancel
-            </Link>
-          </div>
-        ) : completedConsultation ? (
-          <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-6">
-            <h2 className="font-semibold text-emerald-950">Consultation completed</h2>
-            {completedConsultation.outcome ? (
+          ) : null}
+        </WorkflowCard>
+
+        {showLegacyWorkflowCards &&
+          (lead.convertedCustomer ? (
+            <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-6">
+              <div className="flex items-center justify-between gap-4">
+                <h2 className="font-semibold text-emerald-950">Customer converted</h2>
+                {canEdit ? (
+                  <form action={submitUndoConversion}>
+                    <button
+                      type="submit"
+                      disabled={undoResult.loading}
+                      aria-label="Undo customer conversion"
+                      title="Undo customer conversion"
+                      className="inline-flex size-9 items-center justify-center rounded-full border border-emerald-700 text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-50"
+                    >
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="size-5"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 7 4 12l5 5" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 12h9a5 5 0 0 1 5 5"
+                        />
+                      </svg>
+                    </button>
+                  </form>
+                ) : null}
+              </div>
               <p className="mt-2 text-sm text-emerald-800">
-                Outcome: {completedConsultation.outcome.replaceAll("_", " ")}
+                This lead now has a customer and property record.
               </p>
-            ) : null}
-            <Link
-              href={`/admin/consultations/${completedConsultation.id}`}
-              className="mt-4 block rounded-lg bg-emerald-700 px-4 py-2 text-center font-semibold text-white"
-            >
-              View Consultation
-            </Link>
-          </div>
-        ) : canEdit ? (
-          <div className="rounded-xl border border-[#b7d36b] bg-white p-6">
-            <h2 className="font-semibold text-[#173f32]">Next step</h2>
-            <p className="mt-2 text-sm text-[#5b685f]">
-              Schedule a consultation to learn more about the property and requested work.
-            </p>
-            <Link
-              href={`/admin/leads/${lead.id}/consultation`}
-              className="mt-4 block rounded-lg bg-[#476654] px-4 py-2 text-center font-semibold text-white"
-            >
-              Schedule Consultation
-            </Link>
-          </div>
-        ) : null}
-        {completedConsultation && assessmentCard ? (
+              <Link
+                href={`/admin/customers/${lead.convertedCustomer.id}`}
+                className="mt-4 block w-full rounded-lg bg-emerald-700 px-4 py-2 text-center font-semibold text-white hover:bg-emerald-800"
+              >
+                View Customer
+              </Link>
+              <Link
+                href={`/admin/customers/${lead.convertedCustomer.id}#properties`}
+                className="mt-3 block text-center text-sm font-semibold text-emerald-800 hover:underline"
+              >
+                View Properties
+              </Link>
+            </div>
+          ) : activeConsultation ? (
+            <div className="rounded-xl border border-[#b7d36b] bg-white p-6">
+              <h2 className="font-semibold text-[#173f32]">Upcoming consultation</h2>
+              <p className="mt-2 text-sm text-[#5b685f]">
+                {activeConsultation.type.replaceAll("_", " ")} ·{" "}
+                {date(activeConsultation.scheduledStart)} · {activeConsultation.status}
+              </p>
+              <Link
+                href={`/admin/consultations/${activeConsultation.id}`}
+                className="mt-4 block rounded-lg bg-[#476654] px-4 py-2 text-center font-semibold text-white"
+              >
+                View Consultation
+              </Link>
+              <Link
+                href={`/admin/consultations/${activeConsultation.id}`}
+                className="mt-3 block text-center text-sm font-semibold text-[#476654] hover:underline"
+              >
+                Reschedule or cancel
+              </Link>
+            </div>
+          ) : completedConsultation ? (
+            <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-6">
+              <h2 className="font-semibold text-emerald-950">Consultation completed</h2>
+              {completedConsultation.outcome ? (
+                <p className="mt-2 text-sm text-emerald-800">
+                  Outcome: {completedConsultation.outcome.replaceAll("_", " ")}
+                </p>
+              ) : null}
+              <Link
+                href={`/admin/consultations/${completedConsultation.id}`}
+                className="mt-4 block rounded-lg bg-emerald-700 px-4 py-2 text-center font-semibold text-white"
+              >
+                View Consultation
+              </Link>
+            </div>
+          ) : canEdit ? (
+            <div className="rounded-xl border border-[#b7d36b] bg-white p-6">
+              <h2 className="font-semibold text-[#173f32]">Next step</h2>
+              <p className="mt-2 text-sm text-[#5b685f]">
+                Schedule a consultation to learn more about the property and requested work.
+              </p>
+              <Link
+                href={`/admin/leads/${lead.id}/consultation`}
+                className="mt-4 block rounded-lg bg-[#476654] px-4 py-2 text-center font-semibold text-white"
+              >
+                Schedule Consultation
+              </Link>
+            </div>
+          ) : null)}
+        {showLegacyWorkflowCards && completedConsultation && assessmentCard ? (
           <div
             className={
               assessmentCompleted
@@ -371,7 +509,7 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
             )}
           </div>
         ) : null}
-        {lead.estimate || estimateEligible ? (
+        {showLegacyWorkflowCards && lead.estimate ? (
           <div
             className={
               lead.estimate?.status === "COMPLETED"
@@ -408,7 +546,7 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
             ) : null}
           </div>
         ) : null}
-        {!lead.convertedCustomer && canEdit ? (
+        {showLegacyWorkflowCards && !lead.convertedCustomer && canEdit ? (
           <div className="text-center">
             <form action={submitConversion}>
               <button
@@ -472,6 +610,73 @@ export function LeadDetails({ leadId, canEdit }: { leadId: string; canEdit: bool
         )}
       </aside>
     </div>
+  );
+}
+
+function WorkflowCard({
+  title,
+  state,
+  description,
+  children,
+}: {
+  title: string;
+  state: "not started" | "active" | "completed";
+  description: string;
+  children: React.ReactNode;
+}) {
+  const completed = state === "completed";
+  return (
+    <section
+      className={
+        completed
+          ? "rounded-xl border border-emerald-300 bg-emerald-50 p-6"
+          : "rounded-xl border border-[#b7c8b5] bg-white p-6"
+      }
+    >
+      <div className="flex items-start justify-between gap-4">
+        <h2
+          className={completed ? "font-semibold text-emerald-950" : "font-semibold text-[#173f32]"}
+        >
+          {title}
+        </h2>
+        <span
+          className={`rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase ${
+            completed
+              ? "bg-emerald-200 text-emerald-900"
+              : state === "active"
+                ? "bg-[#e3edd4] text-[#35503f]"
+                : "bg-[#edf0ea] text-[#65736a]"
+          }`}
+        >
+          {state}
+        </span>
+      </div>
+      <p className={`mt-2 text-sm ${completed ? "text-emerald-800" : "text-[#5b685f]"}`}>
+        {description}
+      </p>
+      {children}
+    </section>
+  );
+}
+
+function WorkflowLink({
+  href,
+  completed = false,
+  children,
+}: {
+  href: string;
+  completed?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`mt-4 block rounded-lg px-4 py-2 text-center font-semibold text-white ${
+        completed ? "bg-emerald-700 hover:bg-emerald-800" : "bg-[#476654] hover:bg-[#395344]"
+      }`}
+    >
+      {children}
+    </Link>
   );
 }
 

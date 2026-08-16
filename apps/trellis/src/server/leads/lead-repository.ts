@@ -1,17 +1,17 @@
 import type { LeadStatus, PrismaClient } from "@prisma/client";
 
 import type { LeadListFilters } from "@/lib/validation/lead-management";
+import { deriveLeadWorkflowStatus } from "@/lib/lead-workflow";
 
-export function findLeadsForOrganization(
+export async function findLeadsForOrganization(
   prisma: PrismaClient,
   organizationId: string,
   filters: LeadListFilters = { sort: "newest" },
 ) {
   const search = filters.search?.trim();
-  return prisma.lead.findMany({
+  const leads = await prisma.lead.findMany({
     where: {
       organizationId,
-      ...(filters.status ? { status: filters.status } : {}),
       ...(search
         ? {
             OR: ["firstName", "lastName", "email", "phone"].map((field) => ({
@@ -20,9 +20,19 @@ export function findLeadsForOrganization(
           }
         : {}),
     },
-    include: { requestedServices: true },
+    include: {
+      requestedServices: true,
+      convertedCustomer: { select: { id: true } },
+      estimate: { select: { status: true } },
+      consultations: {
+        select: { status: true, assessment: { select: { status: true } } },
+      },
+    },
     orderBy: { createdAt: filters.sort === "oldest" ? "asc" : "desc" },
   });
+  return filters.status
+    ? leads.filter((lead) => deriveLeadWorkflowStatus(lead) === filters.status)
+    : leads;
 }
 
 export function findLeadForOrganization(

@@ -8,7 +8,7 @@ import {
 } from "./lead-repository";
 
 describe("tenant-scoped lead repository", () => {
-  it("keeps search and status filters inside the organization scope", async () => {
+  it("keeps search inside the organization scope and derives milestone status", async () => {
     const findMany = vi.fn().mockResolvedValue([]);
     await findLeadsForOrganization({ lead: { findMany } } as never, "organization-1", {
       search: "smith",
@@ -16,18 +16,22 @@ describe("tenant-scoped lead repository", () => {
       sort: "oldest",
     });
 
-    expect(findMany).toHaveBeenCalledWith({
-      where: {
-        organizationId: "organization-1",
-        status: "NEW",
-        OR: expect.arrayContaining([
-          { firstName: { contains: "smith", mode: "insensitive" } },
-          { email: { contains: "smith", mode: "insensitive" } },
-        ]),
-      },
-      include: { requestedServices: true },
-      orderBy: { createdAt: "asc" },
-    });
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          organizationId: "organization-1",
+          OR: expect.arrayContaining([
+            { firstName: { contains: "smith", mode: "insensitive" } },
+            { email: { contains: "smith", mode: "insensitive" } },
+          ]),
+        },
+        include: expect.objectContaining({
+          requestedServices: true,
+          convertedCustomer: { select: { id: true } },
+        }),
+        orderBy: { createdAt: "asc" },
+      }),
+    );
   });
 
   it("looks up details by both lead and organization IDs", async () => {

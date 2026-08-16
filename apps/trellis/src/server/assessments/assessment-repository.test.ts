@@ -50,7 +50,6 @@ describe("tenant-scoped property assessments", () => {
         where: expect.objectContaining({
           organizationId: "org-1",
           status: "COMPLETED",
-          outcome: "ASSESSMENT_NEEDED",
         }),
       }),
     );

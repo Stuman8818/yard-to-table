@@ -7,6 +7,18 @@ query Leads($search: String, $status: LeadStatus, $sort: LeadSort) {
     phone
     status
     createdAt
+    convertedCustomer {
+      id
+    }
+    estimate {
+      status
+    }
+    consultations {
+      status
+      assessment {
+        status
+      }
+    }
     requestedServices {
       id
       leadId

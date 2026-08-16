@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const defaultTrellisUrl = "https://trellis-software.vercel.app";
+const defaultTrellisUrl =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:3000"
+    : "https://trellis-software.vercel.app";
 
 export function TrellisIntakeEmbed() {
   const trellisUrl = (process.env.NEXT_PUBLIC_TRELLIS_URL ?? defaultTrellisUrl).replace(/\/$/, "");

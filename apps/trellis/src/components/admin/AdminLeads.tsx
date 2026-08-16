@@ -4,6 +4,7 @@ import { useQuery } from "@apollo/client/react";
 import Link from "next/link";
 
 import { LeadsDocument, type LeadStatus } from "@/graphql/generated/graphql";
+import { deriveLeadWorkflowStatus, leadWorkflowStatusLabel } from "@/lib/lead-workflow";
 
 const leadStatuses = [
   "NEW",
@@ -63,38 +64,41 @@ export function AdminLeads({ search, status, sort }: AdminLeadsProps) {
           </tr>
         </thead>
         <tbody className="divide-y divide-[#c3c8c1]/30">
-          {data.leads.map((lead) => (
-            <tr key={lead.id} className="transition-colors hover:bg-[#f5f4ef]/70">
-              <td className="whitespace-nowrap px-6 py-4 font-bold">
-                <Link href={`/admin/leads/${lead.id}`} className="text-[#1b1c19] hover:underline">
-                  {lead.firstName} {lead.lastName}
-                </Link>
-              </td>
-              <td className="px-6 py-4 text-[13px] text-[#434843]">
-                <a href={`mailto:${lead.email}`} className="block hover:underline">
-                  {lead.email}
-                </a>
-                {lead.phone ? (
-                  <a href={`tel:${lead.phone}`} className="block hover:underline">
-                    {lead.phone}
+          {data.leads.map((lead) => {
+            const workflowStatus = deriveLeadWorkflowStatus(lead);
+            return (
+              <tr key={lead.id} className="transition-colors hover:bg-[#f5f4ef]/70">
+                <td className="whitespace-nowrap px-6 py-4 font-bold">
+                  <Link href={`/admin/leads/${lead.id}`} className="text-[#1b1c19] hover:underline">
+                    {lead.firstName} {lead.lastName}
+                  </Link>
+                </td>
+                <td className="px-6 py-4 text-[13px] text-[#434843]">
+                  <a href={`mailto:${lead.email}`} className="block hover:underline">
+                    {lead.email}
                   </a>
-                ) : null}
-              </td>
-              <td className="px-6 py-4 text-xs tracking-wider uppercase">
-                {lead.status.replaceAll("_", " ")}
-              </td>
-              <td className="px-6 py-4 text-[13px] tracking-wide text-[#434843] uppercase">
-                {lead.requestedServices
-                  .map(({ serviceType }) => serviceType.replaceAll("_", " "))
-                  .join(", ")}
-              </td>
-              <td className="whitespace-nowrap px-6 py-4 text-[13px] text-[#434843]">
-                {new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
-                  new Date(lead.createdAt),
-                )}
-              </td>
-            </tr>
-          ))}
+                  {lead.phone ? (
+                    <a href={`tel:${lead.phone}`} className="block hover:underline">
+                      {lead.phone}
+                    </a>
+                  ) : null}
+                </td>
+                <td className="px-6 py-4 text-xs tracking-wider uppercase">
+                  {leadWorkflowStatusLabel(workflowStatus)}
+                </td>
+                <td className="px-6 py-4 text-[13px] tracking-wide text-[#434843] uppercase">
+                  {lead.requestedServices
+                    .map(({ serviceType }) => serviceType.replaceAll("_", " "))
+                    .join(", ")}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-[13px] text-[#434843]">
+                  {new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
+                    new Date(lead.createdAt),
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

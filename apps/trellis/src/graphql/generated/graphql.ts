@@ -575,6 +575,12 @@ export type LeadsQuery = {
     phone: string | null;
     status: LeadStatus;
     createdAt: string;
+    convertedCustomer: { id: string } | null;
+    estimate: { status: EstimateStatus } | null;
+    consultations: Array<{
+      status: ConsultationStatus;
+      assessment: { status: PropertyAssessmentStatus } | null;
+    }>;
     requestedServices: Array<{ id: string; leadId: string; serviceType: ServiceType }>;
   }>;
 };
@@ -2222,6 +2228,40 @@ export const LeadsDocument = {
                 { kind: "Field", name: { kind: "Name", value: "phone" } },
                 { kind: "Field", name: { kind: "Name", value: "status" } },
                 { kind: "Field", name: { kind: "Name", value: "createdAt" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "convertedCustomer" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [{ kind: "Field", name: { kind: "Name", value: "id" } }],
+                  },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "estimate" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [{ kind: "Field", name: { kind: "Name", value: "status" } }],
+                  },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "consultations" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "status" } },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "assessment" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [{ kind: "Field", name: { kind: "Name", value: "status" } }],
+                        },
+                      },
+                    ],
+                  },
+                },
                 {
                   kind: "Field",
                   name: { kind: "Name", value: "requestedServices" },

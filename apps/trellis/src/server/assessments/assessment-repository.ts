@@ -49,7 +49,6 @@ export function findAssessmentContextForOrganization(
       id: consultationId,
       organizationId,
       status: "COMPLETED",
-      outcome: "ASSESSMENT_NEEDED",
     },
     include: { lead: { include: { requestedServices: true } }, property: true, assessment: true },
   });
@@ -73,7 +72,6 @@ export async function createAssessmentForConsultation(
         id: consultationId,
         organizationId,
         status: "COMPLETED",
-        outcome: "ASSESSMENT_NEEDED",
       },
       include: { assessment: true },
     });
