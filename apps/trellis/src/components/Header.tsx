@@ -33,10 +33,10 @@ export function Header() {
         </nav>
 
         <Link
-          href="/#interest"
+          href="/"
           className="inline-flex items-center justify-center rounded-lg bg-[#e8eee5] px-4 py-2.5 text-sm font-semibold text-[#173f32] transition-colors hover:bg-white"
         >
-          Join Early Interest
+          Request an Estimate
         </Link>
       </div>
     </header>

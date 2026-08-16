@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { IntakeExperience } from "@/components/intake/IntakeExperience";
+import { EmbedHeightReporter } from "@/components/intake/EmbedHeightReporter";
 
 export const metadata: Metadata = {
   title: "Request landscaping service",
@@ -11,5 +12,10 @@ export const metadata: Metadata = {
 };
 
 export default function EmbeddedIntakePage() {
-  return <IntakeExperience embedded />;
+  return (
+    <>
+      <EmbedHeightReporter />
+      <IntakeExperience embedded />
+    </>
+  );
 }

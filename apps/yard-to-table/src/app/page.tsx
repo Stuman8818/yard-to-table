@@ -1,21 +1,62 @@
+import Image from "next/image";
+
 import { TrellisIntakeEmbed } from "../components/TrellisIntakeEmbed";
 
 const services = [
   {
-    title: "Lawn care",
-    description: "Dependable mowing, trimming, edging, and cleanup tailored to the property.",
+    title: "Lawn maintenance",
+    description: "Consistent care that keeps lawns and the edges around them looking finished.",
+    items: ["Weekly mowing", "String trimming", "Edging", "Blowing", "Hedge trimming"],
   },
   {
-    title: "Garden consultation",
-    description: "Practical guidance for making better use of sunny, shaded, and growing spaces.",
+    title: "Landscape maintenance",
+    description: "Seasonal upkeep for planting beds, shrubs, and established landscapes.",
+    items: [
+      "Mulch installation",
+      "Bed edging",
+      "Weeding",
+      "Shrub trimming",
+      "Spring cleanup",
+      "Fall cleanup",
+      "Plant replacement",
+    ],
   },
   {
-    title: "Garden design & installation",
-    description: "Thoughtful plans and hands-on installation for productive, welcoming gardens.",
+    title: "Landscape installation",
+    description: "New planting areas and materials that add structure, color, and curb appeal.",
+    items: [
+      "New landscape beds",
+      "Bed expansion",
+      "Flowers and perennials",
+      "Shrubs",
+      "Small ornamental plants",
+      "Rock installation",
+      "Mulch installation",
+    ],
   },
   {
-    title: "Seasonal maintenance",
-    description: "Ongoing support that keeps lawns and gardens healthy as conditions change.",
+    title: "Garden installation",
+    description: "Practical growing spaces planned and prepared around the property and season.",
+    items: [
+      "Vegetable garden installation",
+      "Raised garden beds",
+      "Garden layout and design",
+      "Soil preparation",
+      "Planting",
+      "Seasonal garden setup",
+    ],
+  },
+  {
+    title: "Property improvement & refresh",
+    description:
+      "Focused improvements that help tired or overgrown outdoor spaces feel cared for again.",
+    items: [
+      "Existing bed renovation",
+      "Overgrown landscape cleanup",
+      "Replacing dead or outdated plants",
+      "Refreshing mulch or rock",
+      "Improving curb appeal",
+    ],
   },
 ] as const;
 
@@ -29,22 +70,33 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#f6f4ed] text-[#1e2923]">
       <header className="border-b border-white/15 bg-[#173f32] text-white">
-        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6 sm:px-8">
+        <div className="mx-auto flex min-h-24 max-w-6xl items-center justify-between gap-5 px-6 py-3 sm:px-8">
           <a
             href="#top"
-            className="font-semibold tracking-[-0.02em]"
+            className="flex shrink-0 items-center gap-3"
             aria-label="Yard To Table home"
           >
-            Yard To Table
+            <Image
+              src="/Yard to Table Logo.png"
+              alt=""
+              width={64}
+              height={64}
+              priority
+              className="h-14 w-14 rounded-xl bg-[#f8f5ec] object-contain p-1 shadow-sm"
+            />
+            <span>
+              <span className="block font-semibold tracking-[-0.02em]">Yard To Table</span>
+              <span className="hidden text-xs text-[#adc4b3] sm:block">Landscaping</span>
+            </span>
           </a>
           <nav
             aria-label="Primary navigation"
-            className="flex gap-5 text-sm text-[#d7e2da] sm:gap-7"
+            className="flex gap-4 text-xs text-[#d7e2da] sm:gap-7 sm:text-sm"
           >
             <a href="#services" className="hover:text-white">
               Services
             </a>
-            <a href="#approach" className="hover:text-white">
+            <a href="#approach" className="hidden hover:text-white md:inline">
               Our approach
             </a>
             <a href="#request-service" className="hover:text-white">
@@ -82,14 +134,30 @@ export default function Home() {
             <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">
               Practical help for the whole outdoor space.
             </h2>
-            <div className="mt-12 grid gap-4 sm:grid-cols-2">
+            <p className="mt-5 max-w-2xl leading-7 text-[#59665e]">
+              From weekly lawn maintenance to garden installations and complete landscape refreshes,
+              choose the level of help that fits your property.
+            </p>
+            <div className="mt-12 grid items-start gap-5 md:grid-cols-2 lg:grid-cols-3">
               {services.map((service) => (
                 <article
                   key={service.title}
-                  className="rounded-xl border border-[#d5ded2] bg-white p-7"
+                  className="rounded-xl border border-[#d5ded2] bg-white p-7 shadow-[0_10px_30px_rgba(32,59,49,0.04)]"
                 >
-                  <h3 className="text-xl font-semibold">{service.title}</h3>
-                  <p className="mt-3 leading-7 text-[#607067]">{service.description}</p>
+                  <div className="mb-6 h-1 w-10 rounded-full bg-[#78957e]" aria-hidden="true" />
+                  <h3 className="text-xl font-semibold tracking-[-0.02em]">{service.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-[#607067]">{service.description}</p>
+                  <ul className="mt-6 space-y-2.5 border-t border-[#e2e7df] pt-5 text-sm text-[#405247]">
+                    {service.items.map((item) => (
+                      <li key={item} className="flex gap-3">
+                        <span
+                          className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#78957e]"
+                          aria-hidden="true"
+                        />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </article>
               ))}
             </div>

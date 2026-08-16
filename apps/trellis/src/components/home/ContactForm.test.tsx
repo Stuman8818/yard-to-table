@@ -20,115 +20,150 @@ const variables = {
     state: "IN",
     postalCode: "46204",
     email: "jane@example.com",
-    serviceTypes: ["LAWN_CARE"],
-    message: "Please help with my vegetable garden.",
+    serviceTypes: ["LAWN_MAINTENANCE"],
+    serviceDetails: ["LAWN_WEEKLY_MOWING"],
+    desiredTiming: "NEXT_FEW_WEEKS",
+    message: "Please help with recurring lawn maintenance.",
   },
 };
+
+function renderForm(mocks: React.ComponentProps<typeof MockedProvider>["mocks"] = []) {
+  return render(
+    <MockedProvider mocks={mocks}>
+      <ContactForm />
+    </MockedProvider>,
+  );
+}
 
 async function completeForm() {
   const user = userEvent.setup();
 
+  await user.click(screen.getByRole("checkbox", { name: /Lawn Maintenance/i }));
+  await user.click(screen.getByRole("checkbox", { name: "Weekly mowing" }));
+  await user.type(screen.getByLabelText("Tell us about your project"), variables.input.message);
+  await user.selectOptions(
+    screen.getByLabelText(/When would you like the work done/i),
+    variables.input.desiredTiming,
+  );
   await user.type(screen.getByLabelText("First name"), variables.input.firstName);
   await user.type(screen.getByLabelText("Last name"), variables.input.lastName);
   await user.type(screen.getByLabelText("Phone number"), variables.input.phone);
+  await user.type(screen.getByLabelText("Email address"), variables.input.email);
   await user.type(screen.getByLabelText("Street address"), variables.input.address);
   await user.type(screen.getByLabelText("City"), variables.input.city);
   await user.type(screen.getByLabelText("ZIP code"), variables.input.postalCode);
-  await user.type(screen.getByLabelText("Email address"), variables.input.email);
-  await user.type(screen.getByLabelText("Notes"), variables.input.message);
-  await user.click(screen.getByRole("button", { name: "Join the early interest list" }));
+  await user.click(screen.getByRole("button", { name: "Request an Estimate" }));
 }
 
 describe("ContactForm", () => {
-  it("enables lawn care and prevents selecting future services", async () => {
+  it("offers active, multi-select service categories without launch language", async () => {
     const user = userEvent.setup();
-    const { container } = render(
-      <MockedProvider>
-        <ContactForm />
-      </MockedProvider>,
-    );
+    renderForm();
 
-    expect(screen.getByRole("checkbox", { name: /Lawn Care/i })).toBeEnabled();
-    expect(screen.getByRole("checkbox", { name: /Lawn Care/i })).toBeChecked();
-    expect(
-      screen.getByText(/Includes mowing, trimming and edging, and cleanup/i),
-    ).toBeInTheDocument();
-    for (const legacyValue of ["LAWN_MOWING", "TRIMMING_EDGING", "YARD_CLEANUP"]) {
-      expect(container.querySelector(`input[value="${legacyValue}"]`)).not.toBeInTheDocument();
-    }
-    const gardenDesign = screen.getByRole("checkbox", { name: /Garden Design.*Coming soon/i });
-    expect(gardenDesign).toBeDisabled();
-    await user.click(gardenDesign);
-    expect(gardenDesign).not.toBeChecked();
-    expect(screen.getAllByText("Coming soon")).toHaveLength(5);
+    const lawn = screen.getByRole("checkbox", { name: /Lawn Maintenance/i });
+    const landscape = screen.getByRole("checkbox", { name: /Landscape Maintenance/i });
+
+    expect(lawn).toBeEnabled();
+    expect(landscape).toBeEnabled();
+    expect(lawn).not.toBeChecked();
+    expect(screen.queryByText(/coming soon/i)).not.toBeInTheDocument();
+
+    await user.click(lawn);
+    await user.click(landscape);
+    expect(lawn).toBeChecked();
+    expect(landscape).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Weekly mowing" })).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Weeding" })).toBeInTheDocument();
   });
 
-  it("defaults state to IN and prevents editing it", () => {
-    render(
-      <MockedProvider>
-        <ContactForm />
-      </MockedProvider>,
+  it("removes stale child services when their category is deselected", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    const lawn = screen.getByRole("checkbox", { name: /Lawn Maintenance/i });
+    await user.click(lawn);
+    await user.click(screen.getByRole("checkbox", { name: "Weekly mowing" }));
+    await user.click(lawn);
+
+    expect(screen.queryByRole("checkbox", { name: "Weekly mowing" })).not.toBeInTheDocument();
+
+    await user.click(lawn);
+    expect(screen.getByRole("checkbox", { name: "Weekly mowing" })).not.toBeChecked();
+  });
+
+  it("allows a not-sure request without showing child selections", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.click(screen.getByRole("checkbox", { name: /Not Sure What I Need/i }));
+
+    expect(
+      screen.queryByRole("heading", { name: "Any specific services?" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Tell us about your project")).toBeRequired();
+  });
+
+  it("requires at least one top-level service category", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.click(screen.getByRole("button", { name: "Request an Estimate" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Please correct the highlighted fields.",
     );
+    expect(screen.getByText("Select at least one type of work.")).toBeInTheDocument();
+  });
+
+  it("defaults state to IN and explains the active service area", () => {
+    renderForm();
 
     expect(screen.getByLabelText("State")).toHaveValue("IN");
     expect(screen.getByLabelText("State")).toBeDisabled();
-    expect(screen.getByText("Preparing for an initial Indiana launch.")).toBeInTheDocument();
+    expect(screen.getByText(/currently serves properties in Indiana/i)).toBeInTheDocument();
   });
 
-  it("shows success and resets the form after a confirmed submission", async () => {
-    render(
-      <MockedProvider
-        mocks={[
-          {
-            request: { query: CreateLeadDocument, variables },
-            result: {
-              data: {
-                createLead: {
-                  __typename: "CreateLeadPayload",
-                  success: true,
-                  leadId: "lead-1",
-                  message: "Your request has been received.",
-                },
-              },
+  it("submits category, detail, timing, and project information, then resets", async () => {
+    renderForm([
+      {
+        request: { query: CreateLeadDocument, variables },
+        result: {
+          data: {
+            createLead: {
+              __typename: "CreateLeadPayload",
+              success: true,
+              leadId: "lead-1",
+              message: "Your request has been received.",
             },
           },
-        ]}
-      >
-        <ContactForm />
-      </MockedProvider>,
-    );
+        },
+      },
+    ]);
 
     await completeForm();
 
     expect(await screen.findByRole("status")).toHaveTextContent(
-      "Thanks—your interest has been recorded.",
+      "Thanks—your estimate request has been received.",
     );
     expect(screen.getByLabelText("First name")).toHaveValue("");
-    expect(screen.getByLabelText("Last name")).toHaveValue("");
-    expect(screen.getByLabelText("State")).toHaveValue("IN");
-    expect(screen.getByRole("checkbox", { name: /Lawn Care/i })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /Lawn Maintenance/i })).not.toBeChecked();
+    expect(screen.getByLabelText(/When would you like the work done/i)).toHaveValue("");
   });
 
   it("shows a safe error and preserves values when submission fails", async () => {
-    render(
-      <MockedProvider
-        mocks={[
-          {
-            request: { query: CreateLeadDocument, variables },
-            error: new Error("network unavailable"),
-          },
-        ]}
-      >
-        <ContactForm />
-      </MockedProvider>,
-    );
+    renderForm([
+      {
+        request: { query: CreateLeadDocument, variables },
+        error: new Error("network unavailable"),
+      },
+    ]);
 
     await completeForm();
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "We couldn’t record your interest. Please try again.",
+      "We couldn’t submit your request. Please try again.",
     );
     expect(screen.getByLabelText("First name")).toHaveValue("Jane");
-    expect(screen.getByLabelText("Last name")).toHaveValue("Gardner");
+    expect(screen.getByRole("checkbox", { name: /Lawn Maintenance/i })).toBeChecked();
   });
 });

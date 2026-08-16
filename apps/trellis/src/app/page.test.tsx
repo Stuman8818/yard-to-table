@@ -23,9 +23,7 @@ describe("Trellis customer intake", () => {
     expect(screen.getByRole("region", { name: "Customer service request" })).toBeInTheDocument();
     expect(screen.getByLabelText("First name")).toBeInTheDocument();
     expect(screen.getByLabelText("Street address")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /join the early interest list/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /request an estimate/i })).toBeInTheDocument();
   });
 
   it("sets clear expectations around operational follow-up", () => {
