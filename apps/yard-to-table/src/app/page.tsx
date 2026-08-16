@@ -1,3 +1,5 @@
+import { TrellisIntakeEmbed } from "../components/TrellisIntakeEmbed";
+
 const services = [
   {
     title: "Lawn care",
@@ -45,6 +47,9 @@ export default function Home() {
             <a href="#approach" className="hover:text-white">
               Our approach
             </a>
+            <a href="#request-service" className="hover:text-white">
+              Request service
+            </a>
           </nav>
         </div>
       </header>
@@ -63,10 +68,10 @@ export default function Home() {
               spaces, and make thoughtful improvements to the whole property.
             </p>
             <a
-              href="#services"
+              href="#request-service"
               className="mt-9 inline-flex rounded-lg bg-[#e9efe5] px-5 py-3 font-semibold text-[#173f32] hover:bg-white"
             >
-              Explore our services
+              Request service
             </a>
           </div>
         </section>
@@ -115,6 +120,26 @@ export default function Home() {
                 </li>
               ))}
             </ul>
+          </div>
+        </section>
+
+        <section id="request-service" className="scroll-mt-8 bg-[#e8eee5]">
+          <div className="mx-auto max-w-6xl px-3 py-20 sm:px-8 sm:py-28">
+            <div className="px-3 sm:px-0">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#476654]">
+                Request service
+              </p>
+              <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">
+                Tell us what your property needs.
+              </h2>
+              <p className="mt-5 max-w-2xl leading-7 text-[#59665e]">
+                This secure request form is provided by Trellis, our field-service platform. Your
+                information goes directly into our service workflow for follow-up.
+              </p>
+            </div>
+            <div className="mt-10">
+              <TrellisIntakeEmbed />
+            </div>
           </div>
         </section>
       </main>
