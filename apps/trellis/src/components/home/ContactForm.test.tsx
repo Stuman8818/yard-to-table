@@ -22,7 +22,6 @@ const variables = {
     email: "jane@example.com",
     serviceTypes: ["LAWN_MAINTENANCE"],
     serviceDetails: ["LAWN_WEEKLY_MOWING"],
-    desiredTiming: "NEXT_FEW_WEEKS",
     message: "Please help with recurring lawn maintenance.",
   },
 };
@@ -41,10 +40,6 @@ async function completeForm() {
   await user.click(screen.getByRole("checkbox", { name: /Lawn Maintenance/i }));
   await user.click(screen.getByRole("checkbox", { name: "Weekly mowing" }));
   await user.type(screen.getByLabelText("Tell us about your project"), variables.input.message);
-  await user.selectOptions(
-    screen.getByLabelText(/When would you like the work done/i),
-    variables.input.desiredTiming,
-  );
   await user.type(screen.getByLabelText("First name"), variables.input.firstName);
   await user.type(screen.getByLabelText("Last name"), variables.input.lastName);
   await user.type(screen.getByLabelText("Phone number"), variables.input.phone);
@@ -123,7 +118,7 @@ describe("ContactForm", () => {
     expect(screen.getByText(/currently serves properties in Indiana/i)).toBeInTheDocument();
   });
 
-  it("submits category, detail, timing, and project information, then resets", async () => {
+  it("submits category, detail, and project information, then resets", async () => {
     renderForm([
       {
         request: { query: CreateLeadDocument, variables },
@@ -147,7 +142,7 @@ describe("ContactForm", () => {
     );
     expect(screen.getByLabelText("First name")).toHaveValue("");
     expect(screen.getByRole("checkbox", { name: /Lawn Maintenance/i })).not.toBeChecked();
-    expect(screen.getByLabelText(/When would you like the work done/i)).toHaveValue("");
+    expect(screen.queryByLabelText(/When would you like the work done/i)).not.toBeInTheDocument();
   });
 
   it("shows a safe error and preserves values when submission fails", async () => {

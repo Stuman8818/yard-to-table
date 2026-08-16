@@ -2,14 +2,13 @@
 
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { useMutation } from "@apollo/client/react";
+import Image from "next/image";
 import { useRef, useState } from "react";
 
 import { CreateLeadDocument } from "@/graphql/generated/graphql";
 import {
   customerServiceCategories,
-  desiredTimingOptions,
   type CustomerServiceType,
-  type DesiredTiming,
   type ServiceDetailType,
 } from "@/lib/services";
 import {
@@ -32,7 +31,6 @@ type FormValues = {
   email: string;
   serviceTypes: CustomerServiceType[];
   serviceDetails: ServiceDetailType[];
-  desiredTiming?: DesiredTiming;
   message: string;
 };
 
@@ -47,7 +45,6 @@ const initialValues: FormValues = {
   email: "",
   serviceTypes: [],
   serviceDetails: [],
-  desiredTiming: undefined,
   message: "",
 };
 
@@ -304,39 +301,6 @@ export default function ContactForm() {
         )}
       </div>
 
-      <div className="mt-6">
-        <label htmlFor="contact-desiredTiming" className="mb-1.5 block font-semibold">
-          When would you like the work done? <span className="font-normal">(optional)</span>
-        </label>
-        <select
-          id="contact-desiredTiming"
-          value={values.desiredTiming ?? ""}
-          onChange={(event) => {
-            const desiredTiming = event.target.value || undefined;
-            setValues((current) => ({
-              ...current,
-              desiredTiming: desiredTiming as DesiredTiming | undefined,
-            }));
-            setFieldErrors((current) => ({ ...current, desiredTiming: undefined }));
-          }}
-          aria-invalid={Boolean(fieldErrors.desiredTiming)}
-          aria-describedby={fieldErrors.desiredTiming ? "desiredTiming-error" : undefined}
-          className={inputClassName}
-        >
-          <option value="">Select a timeframe</option>
-          {desiredTimingOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        {fieldErrors.desiredTiming && (
-          <p id="desiredTiming-error" className="mt-1 text-sm text-red-700">
-            {fieldErrors.desiredTiming}
-          </p>
-        )}
-      </div>
-
       <section className="mt-8 border-t border-[#dbe2d8] pt-7">
         <h2 className="text-lg font-semibold text-[#263a2f]">Your contact and property details</h2>
         <div className="mt-5 grid gap-x-4 gap-y-5 sm:grid-cols-2">
@@ -456,7 +420,7 @@ export default function ContactForm() {
         <p className="mb-3 text-xs font-normal leading-5 text-[#66746b]">
           We’ll review your request and follow up to discuss the property and next steps.
         </p>
-        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <button
             type="submit"
             disabled={loading}
@@ -464,6 +428,16 @@ export default function ContactForm() {
           >
             {loading ? "Submitting…" : "Request an Estimate"}
           </button>
+          <div className="flex items-center gap-2" aria-label="Powered by Trellis">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#778179]">
+              Powered by
+            </span>
+            <span className="relative h-10 w-28 overflow-hidden" aria-hidden="true">
+              <Image src="/Trellis Logo.png" alt="" fill sizes="112px" className="object-cover" />
+            </span>
+          </div>
+        </div>
+        <div className="mt-3">
           {status && (
             <p
               role={status.ok ? "status" : "alert"}
