@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f6f4ed;
+  --foreground: #1e2923;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Avenir Next", Avenir, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+::selection {
+  background: #c9d9bb;
+  color: #173f32;
+}
+
+a {
+  outline-offset: 4px;
+}

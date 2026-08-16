@@ -5,9 +5,8 @@ import { ApolloProvider } from "@/components/providers/ApolloProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Yard To Table | Lawn & Garden Services Launching Soon",
-  description:
-    "Yard To Table is preparing to launch lawn care and garden services in Indiana, supported by a custom property-planning application.",
+  title: "Trellis | Yard To Table Operations",
+  description: "Customer intake and field-service operations for Yard To Table Landscaping.",
 };
 
 export default function RootLayout({
