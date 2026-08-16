@@ -34,7 +34,7 @@ export function AdminLeads({ search, status, sort }: AdminLeadsProps) {
     },
   });
 
-  if (loading) return <p className="py-12 text-center text-[#5b685f]">Loading leadsâ€¦</p>;
+  if (loading) return <p className="py-12 text-center text-[#5b685f]">Loading leads...</p>;
   if (error)
     return (
       <p role="alert" className="rounded-xl bg-[#fbe8e4] p-5 text-[#7d2d22]">
@@ -51,26 +51,26 @@ export function AdminLeads({ search, status, sort }: AdminLeadsProps) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-[#d8ddd4] bg-white shadow-sm">
-      <table className="min-w-full divide-y divide-[#d8ddd4] text-left text-sm">
-        <thead className="bg-[#edf1e9] text-[#35483d]">
+    <div className="overflow-x-auto rounded-lg border border-[#c3c8c1]/40 bg-white shadow-sm">
+      <table className="w-full min-w-[800px] border-collapse text-left text-sm">
+        <thead className="border-b border-[#c3c8c1]/40 bg-[#f5f4ef] text-xs text-[#434843]">
           <tr>
             {["Name", "Contact", "Status", "Services", "Received"].map((heading) => (
-              <th key={heading} scope="col" className="px-5 py-3 font-semibold">
+              <th key={heading} scope="col" className="px-6 py-4 font-semibold">
                 {heading}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-[#e5e9e2]">
+        <tbody className="divide-y divide-[#c3c8c1]/30">
           {data.leads.map((lead) => (
-            <tr key={lead.id} className="hover:bg-[#fafbf8]">
-              <td className="whitespace-nowrap px-5 py-4 font-semibold">
-                <Link href={`/admin/leads/${lead.id}`} className="text-[#173f32] hover:underline">
+            <tr key={lead.id} className="transition-colors hover:bg-[#f5f4ef]/70">
+              <td className="whitespace-nowrap px-6 py-4 font-bold">
+                <Link href={`/admin/leads/${lead.id}`} className="text-[#1b1c19] hover:underline">
                   {lead.firstName} {lead.lastName}
                 </Link>
               </td>
-              <td className="px-5 py-4 text-[#4c5c52]">
+              <td className="px-6 py-4 text-[13px] text-[#434843]">
                 <a href={`mailto:${lead.email}`} className="block hover:underline">
                   {lead.email}
                 </a>
@@ -80,13 +80,15 @@ export function AdminLeads({ search, status, sort }: AdminLeadsProps) {
                   </a>
                 ) : null}
               </td>
-              <td className="px-5 py-4">{lead.status.replaceAll("_", " ")}</td>
-              <td className="px-5 py-4">
+              <td className="px-6 py-4 text-xs tracking-wider uppercase">
+                {lead.status.replaceAll("_", " ")}
+              </td>
+              <td className="px-6 py-4 text-[13px] tracking-wide text-[#434843] uppercase">
                 {lead.requestedServices
                   .map(({ serviceType }) => serviceType.replaceAll("_", " "))
                   .join(", ")}
               </td>
-              <td className="whitespace-nowrap px-5 py-4">
+              <td className="whitespace-nowrap px-6 py-4 text-[13px] text-[#434843]">
                 {new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
                   new Date(lead.createdAt),
                 )}

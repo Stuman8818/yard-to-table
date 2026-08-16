@@ -7,6 +7,7 @@ import type {
   Property,
   PropertyAssessment,
   Estimate,
+  EstimateStatus,
 } from "@prisma/client";
 import { GraphQLError } from "graphql";
 
@@ -36,7 +37,10 @@ import {
   updateConsultationForOrganization,
 } from "@/server/consultations/consultation-repository";
 import { sendConsultationConfirmation } from "@/server/email/consultation-confirmation";
-import { findCustomerForOrganization } from "@/server/customers/customer-repository";
+import {
+  findCustomerForOrganization,
+  findCustomersForOrganization,
+} from "@/server/customers/customer-repository";
 import {
   convertLeadToCustomer,
   LeadAlreadyConvertedWithoutCustomerError,
@@ -74,6 +78,7 @@ import {
   createEstimateForLead,
   findEstimateContextForOrganization,
   findEstimateForOrganization,
+  findEstimatesForOrganization,
   updateEstimateForOrganization,
 } from "@/server/estimates/estimate-repository";
 
@@ -140,6 +145,19 @@ export const resolvers = {
     lead: (_parent: unknown, { id }: { id: string }, context: GraphQLContext) => {
       const membership = requireAdminLeadAccess(context);
       return findLeadForOrganization(context.prisma, membership.organizationId, id);
+    },
+    customers: (
+      _parent: unknown,
+      { search }: { search?: string | null },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireAdminLeadAccess(context);
+      const normalizedSearch = search?.trim().slice(0, 100) || undefined;
+      return findCustomersForOrganization(
+        context.prisma,
+        membership.organizationId,
+        normalizedSearch,
+      );
     },
     customer: (_parent: unknown, { id }: { id: string }, context: GraphQLContext) => {
       const membership = requireAdminLeadAccess(context);
@@ -211,6 +229,17 @@ export const resolvers = {
       return parsed.success
         ? findEstimateForOrganization(context.prisma, membership.organizationId, parsed.data)
         : null;
+    },
+    estimates: (
+      _parent: unknown,
+      { search, status }: { search?: string | null; status?: EstimateStatus | null },
+      context: GraphQLContext,
+    ) => {
+      const membership = requireAdminLeadAccess(context);
+      return findEstimatesForOrganization(context.prisma, membership.organizationId, {
+        search: search?.trim().slice(0, 100) || undefined,
+        status: status ?? undefined,
+      });
     },
     estimateContext: async (
       _parent: unknown,

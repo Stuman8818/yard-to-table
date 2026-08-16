@@ -1,3 +1,20 @@
+query Estimates($search: String, $status: EstimateStatus) {
+  estimates(search: $search, status: $status) {
+    id
+    status
+    details
+    totalCents
+    updatedAt
+    completedAt
+    lead {
+      id
+      firstName
+      lastName
+      email
+    }
+  }
+}
+
 query EstimateContext($leadId: ID!) {
   estimateContext(leadId: $leadId) {
     lead {

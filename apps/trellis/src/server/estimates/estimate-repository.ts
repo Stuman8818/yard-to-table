@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { EstimateStatus, PrismaClient } from "@prisma/client";
 
 export type EstimateFields = {
   details?: string;
@@ -22,6 +22,31 @@ const calculatedItems = (items: EstimateFields["lineItems"]) =>
     totalCents: Math.round(item.quantity * item.unitPriceCents),
     sortOrder,
   }));
+
+export function findEstimatesForOrganization(
+  prisma: PrismaClient,
+  organizationId: string,
+  filters: { search?: string; status?: EstimateStatus },
+) {
+  return prisma.estimate.findMany({
+    where: {
+      organizationId,
+      status: filters.status,
+      ...(filters.search
+        ? {
+            OR: [
+              { details: { contains: filters.search, mode: "insensitive" } },
+              { lead: { firstName: { contains: filters.search, mode: "insensitive" } } },
+              { lead: { lastName: { contains: filters.search, mode: "insensitive" } } },
+              { lead: { email: { contains: filters.search, mode: "insensitive" } } },
+            ],
+          }
+        : {}),
+    },
+    include,
+    orderBy: { updatedAt: "desc" },
+  });
+}
 
 export function findEstimateForOrganization(
   prisma: PrismaClient,
