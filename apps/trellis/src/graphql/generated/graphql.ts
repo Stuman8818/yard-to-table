@@ -35,12 +35,14 @@ export type CreateEstimateInput = {
 export type CreateLeadInput = {
   address: string;
   city: string;
+  desiredTiming?: DesiredTiming | null | undefined;
   email: string;
   firstName: string;
   lastName: string;
   message: string;
   phone: string;
   postalCode: string;
+  serviceDetails?: Array<string> | null | undefined;
   serviceTypes: Array<ServiceType>;
   state: string;
 };
@@ -56,6 +58,13 @@ export type CreatePropertyAssessmentInput = {
   recommendedCrewSize?: number | null | undefined;
   requestedWork?: string | null | undefined;
 };
+
+export type DesiredTiming =
+  | "AS_SOON_AS_POSSIBLE"
+  | "FLEXIBLE"
+  | "NEXT_FEW_WEEKS"
+  | "ONE_TO_THREE_MONTHS"
+  | "PLANNING_ESTIMATE";
 
 export type EstimateLineItemInput = {
   description: string;
@@ -111,7 +120,12 @@ export type ServiceType =
   | "GARDEN_DESIGN"
   | "GARDEN_INSTALLATION"
   | "GARDEN_MAINTENANCE"
+  | "LANDSCAPE_INSTALLATION"
+  | "LANDSCAPE_MAINTENANCE"
   | "LAWN_CARE"
+  | "LAWN_MAINTENANCE"
+  | "NOT_SURE"
+  | "PROPERTY_CLEANUP_REFRESH"
   | "RAISED_BED_INSTALLATION";
 
 export type UpdateConsultationInput = {

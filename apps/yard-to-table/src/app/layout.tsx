@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Yard To Table Landscaping",
+  title: "Yard To Table Landscaping | Noblesville & Westfield, IN",
   description:
-    "Thoughtful lawn care, garden planning, installation, and seasonal support for Indiana homeowners.",
+    "Lawn maintenance, landscaping, cleanups, installations, and garden services in Noblesville and Westfield, Indiana.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

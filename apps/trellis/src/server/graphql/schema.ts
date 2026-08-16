@@ -41,6 +41,8 @@ export const typeDefs = `#graphql
     state: String!
     postalCode: String!
     serviceTypes: [ServiceType!]!
+    serviceDetails: [String!]
+    desiredTiming: DesiredTiming
     message: String!
   }
 
@@ -254,5 +256,18 @@ export const typeDefs = `#graphql
     GARDEN_INSTALLATION
     RAISED_BED_INSTALLATION
     GARDEN_MAINTENANCE
+    LAWN_MAINTENANCE
+    LANDSCAPE_MAINTENANCE
+    LANDSCAPE_INSTALLATION
+    PROPERTY_CLEANUP_REFRESH
+    NOT_SURE
+  }
+
+  enum DesiredTiming {
+    AS_SOON_AS_POSSIBLE
+    NEXT_FEW_WEEKS
+    ONE_TO_THREE_MONTHS
+    PLANNING_ESTIMATE
+    FLEXIBLE
   }
 `;

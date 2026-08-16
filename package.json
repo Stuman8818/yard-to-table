@@ -27,8 +27,7 @@
     "db:seed": "npm run db:seed --workspace=@yard-to-table/trellis",
     "db:studio": "npm run db:studio --workspace=@yard-to-table/trellis",
     "db:test": "npm run db:test --workspace=@yard-to-table/trellis",
-    "graphql:codegen": "npm run graphql:codegen --workspace=@yard-to-table/trellis",
-    "postinstall": "npm run db:generate --workspace=@yard-to-table/trellis"
+    "graphql:codegen": "npm run graphql:codegen --workspace=@yard-to-table/trellis"
   },
   "devDependencies": {
     "prettier": "3.9.4"

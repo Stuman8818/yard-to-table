@@ -6,6 +6,7 @@ import {
   type LeadFieldErrors,
   type LeadSubmissionInput,
 } from "@/lib/validation/lead";
+import { getDesiredTimingLabel, getServiceDetailLabel } from "@/lib/services";
 import { sendLeadNotification } from "@/server/email/lead-notification";
 
 interface LeadRepository {
@@ -32,6 +33,25 @@ export class LeadValidationError extends Error {
 
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, " ").trim();
+}
+
+export function formatLeadRequestNotes(input: LeadSubmissionInput): string {
+  const details = input.serviceDetails
+    .map((detail) => getServiceDetailLabel(detail))
+    .filter((label): label is string => Boolean(label));
+  const timing = getDesiredTimingLabel(input.desiredTiming);
+
+  if (details.length === 0 && !timing) {
+    return input.message;
+  }
+
+  return [
+    `Project description:\n${input.message}`,
+    details.length > 0 ? `Specific services:\n${details.join(", ")}` : null,
+    timing ? `Desired timing:\n${timing}` : null,
+  ]
+    .filter((section): section is string => Boolean(section))
+    .join("\n\n");
 }
 
 export async function createLead(
@@ -61,7 +81,7 @@ export async function createLead(
       city: normalized.city,
       state: "IN",
       postalCode: normalized.postalCode,
-      notes: normalized.message,
+      notes: formatLeadRequestNotes(normalized),
       organization: {
         connect: { id: dependencies.organizationId },
       },

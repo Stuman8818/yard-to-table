@@ -64,7 +64,7 @@ describe("lead service", () => {
     );
   });
 
-  it.each([{ state: "OH" }, { serviceTypes: ["GARDEN_DESIGN"] }])(
+  it.each([{ state: "OH" }, { serviceTypes: ["UNKNOWN_SERVICE"] }])(
     "rejects unavailable submission values: $state$serviceTypes",
     async (override) => {
       const leadRepository = createRepositoryMock();
@@ -92,6 +92,36 @@ describe("lead service", () => {
       }),
     ).rejects.toThrow("database unavailable");
     expect(sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("stores new categories as requested services and formats optional request context", async () => {
+    const leadRepository = createRepositoryMock();
+    leadRepository.create.mockResolvedValue({ id: "lead-new-request" });
+
+    await createLead(
+      {
+        ...validInput,
+        serviceTypes: ["LANDSCAPE_MAINTENANCE", "PROPERTY_CLEANUP_REFRESH"],
+        serviceDetails: ["MAINTENANCE_WEEDING", "REFRESH_BED_RENOVATION"],
+        desiredTiming: "ONE_TO_THREE_MONTHS",
+      },
+      {
+        leadRepository,
+        organizationId: "organization-1",
+        sendNotification: vi.fn().mockResolvedValue(undefined),
+      },
+    );
+
+    expect(leadRepository.create.mock.calls[0]?.[0].data).toMatchObject({
+      notes:
+        "Project description:\nPlease help with my garden beds.\n\nSpecific services:\nWeeding, Existing bed renovation\n\nDesired timing:\nWithin 1–3 months",
+      requestedServices: {
+        create: [
+          { serviceType: "LANDSCAPE_MAINTENANCE" },
+          { serviceType: "PROPERTY_CLEANUP_REFRESH" },
+        ],
+      },
+    });
   });
 
   it("keeps the saved lead successful when Resend fails", async () => {

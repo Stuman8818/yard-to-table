@@ -61,3 +61,14 @@ npm run typecheck
 npm test
 npm run build
 ```
+
+## Vercel deployments
+
+Create two Vercel projects from this repository and assign a separate root directory to each one:
+
+- Trellis: `apps/trellis`
+- Yard To Table: `apps/yard-to-table`
+
+Each app owns its build. Trellis generates Prisma Client as part of `npm run build`; the static Yard
+To Table build has no Prisma install or generation step. The root scripts remain conveniences for
+local monorepo development and CI, not deployment lifecycle hooks.
