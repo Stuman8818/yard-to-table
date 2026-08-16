@@ -14,11 +14,11 @@
 /coverage
 
 # next.js
-/.next/
-/out/
+**/.next/
+**/out/
 
 # production
-/build
+**/build
 
 # misc
 .DS_Store
@@ -44,5 +44,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/src/generated/prisma
+**/src/generated/prisma
 .claude/

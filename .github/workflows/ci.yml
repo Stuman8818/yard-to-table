@@ -8,8 +8,9 @@ on:
 
 jobs:
   validate:
-    name: Validate application
+    name: Validate applications
     runs-on: ubuntu-latest
+
     env:
       DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
       AUTH_SECRET: ci-placeholder-only-not-a-production-secret-32-chars
@@ -39,7 +40,7 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Build application
+      - name: Build applications
         run: npm run build
 
   migrate-production:
