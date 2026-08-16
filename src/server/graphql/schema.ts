@@ -8,6 +8,8 @@ export const typeDefs = `#graphql
     consultation(id: ID!): Consultation
     assessment(id: ID!): PropertyAssessment
     assessmentContext(consultationId: ID!): PropertyAssessmentContext
+    estimate(id: ID!): Estimate
+    estimateContext(leadId: ID!): EstimateContext
   }
 
   type Mutation {
@@ -24,6 +26,9 @@ export const typeDefs = `#graphql
     createPropertyAssessment(input: CreatePropertyAssessmentInput!): PropertyAssessment!
     updatePropertyAssessment(input: UpdatePropertyAssessmentInput!): PropertyAssessment!
     completePropertyAssessment(assessmentId: ID!): PropertyAssessment!
+    createEstimate(input: CreateEstimateInput!): Estimate!
+    updateEstimate(input: UpdateEstimateInput!): Estimate!
+    completeEstimate(estimateId: ID!): Estimate!
   }
 
   input CreateLeadInput {
@@ -70,6 +75,7 @@ export const typeDefs = `#graphql
     internalNotes: [LeadNote!]!
     convertedCustomer: Customer
     consultations: [Consultation!]!
+    estimate: Estimate
   }
 
   type Customer {
@@ -183,6 +189,28 @@ export const typeDefs = `#graphql
   }
   enum PropertyAssessmentStatus { DRAFT IN_PROGRESS COMPLETED CANCELLED }
 
+  type Estimate {
+    id: ID!
+    status: EstimateStatus!
+    details: String
+    notes: String
+    totalCents: Int!
+    createdAt: String!
+    updatedAt: String!
+    completedAt: String
+    lead: Lead!
+    consultation: Consultation
+    assessment: PropertyAssessment
+    lineItems: [EstimateLineItem!]!
+    createdBy: LeadNoteAuthor!
+  }
+  type EstimateLineItem { id: ID!, description: String!, quantity: Float!, unitPriceCents: Int!, totalCents: Int! }
+  type EstimateContext { lead: Lead!, consultation: Consultation, assessment: PropertyAssessment, estimate: Estimate }
+  input EstimateLineItemInput { description: String!, quantity: Float!, unitPriceCents: Int! }
+  input CreateEstimateInput { leadId: ID!, details: String, notes: String, lineItems: [EstimateLineItemInput!]! }
+  input UpdateEstimateInput { estimateId: ID!, details: String, notes: String, lineItems: [EstimateLineItemInput!]! }
+  enum EstimateStatus { DRAFT COMPLETED }
+
   type LeadNote {
     id: ID!
     content: String!
@@ -209,6 +237,7 @@ export const typeDefs = `#graphql
     CONSULTATION_COMPLETED
     ASSESSMENT_COMPLETED
     ESTIMATE_SENT
+    ESTIMATE_COMPLETED
     CONVERTED
     LOST
   }

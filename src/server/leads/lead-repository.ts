@@ -35,6 +35,7 @@ export function findLeadForOrganization(
     include: {
       requestedServices: true,
       convertedCustomer: { select: { id: true } },
+      estimate: { select: { id: true, status: true, totalCents: true } },
       consultations: {
         where: { status: { in: ["SCHEDULED", "COMPLETED"] } },
         include: {

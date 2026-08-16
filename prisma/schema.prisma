@@ -13,6 +13,7 @@ enum LeadStatus {
   CONSULTATION_COMPLETED
   ASSESSMENT_COMPLETED
   ESTIMATE_SENT
+  ESTIMATE_COMPLETED
   CONVERTED
   LOST
 }
@@ -60,6 +61,11 @@ enum PropertyAssessmentStatus {
   CANCELLED
 }
 
+enum EstimateStatus {
+  DRAFT
+  COMPLETED
+}
+
 model Lead {
   id                     String      @id @default(cuid())
   firstName              String
@@ -86,6 +92,7 @@ model Lead {
   properties        Property[]
   consultations     Consultation[]
   assessments       PropertyAssessment[]
+  estimate          Estimate?
 
   @@unique([id, organizationId])
   @@index([organizationId])
@@ -107,6 +114,7 @@ model Organization {
   properties    Property[]
   consultations Consultation[]
   assessments   PropertyAssessment[]
+  estimates     Estimate[]
 }
 
 model User {
@@ -123,6 +131,7 @@ model User {
   consultationsAssigned  Consultation[]           @relation("ConsultationAssignee")
   consultationsCompleted Consultation[]           @relation("ConsultationCompleter")
   assessmentsCreated     PropertyAssessment[]
+  estimatesCreated       Estimate[]
 }
 
 model OrganizationMembership {
@@ -243,6 +252,7 @@ model Consultation {
   assignedUser User?               @relation("ConsultationAssignee", fields: [assignedUserId], references: [id], onDelete: Restrict)
   completedBy  User?               @relation("ConsultationCompleter", fields: [completedByUserId], references: [id], onDelete: Restrict)
   assessment   PropertyAssessment?
+  estimates    Estimate[]
 
   @@unique([id, organizationId])
   @@index([organizationId, scheduledStart])
@@ -279,6 +289,7 @@ model PropertyAssessment {
   consultation Consultation @relation(fields: [consultationId, organizationId], references: [id, organizationId], onDelete: Restrict)
   property     Property     @relation(fields: [propertyId, organizationId], references: [id, organizationId], onDelete: Restrict)
   createdBy    User         @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
+  estimate     Estimate?
 
   @@unique([id, organizationId])
   @@unique([consultationId, organizationId])
@@ -286,4 +297,48 @@ model PropertyAssessment {
   @@index([leadId])
   @@index([propertyId])
   @@index([createdByUserId])
+}
+
+model Estimate {
+  id              String         @id @default(cuid())
+  organizationId  String
+  leadId          String         @unique
+  consultationId  String?
+  assessmentId    String?        @unique
+  createdByUserId String
+  status          EstimateStatus @default(DRAFT)
+  details         String?
+  notes           String?
+  totalCents      Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  completedAt     DateTime?
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  lead         Lead                @relation(fields: [leadId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  consultation Consultation?       @relation(fields: [consultationId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  assessment   PropertyAssessment? @relation(fields: [assessmentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  createdBy    User                @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
+  lineItems    EstimateLineItem[]
+
+  @@unique([id, organizationId])
+  @@unique([leadId, organizationId])
+  @@unique([assessmentId, organizationId])
+  @@index([organizationId, createdAt])
+  @@index([consultationId])
+  @@index([createdByUserId])
+}
+
+model EstimateLineItem {
+  id             String @id @default(cuid())
+  estimateId     String
+  description    String
+  quantity       Float
+  unitPriceCents Int
+  totalCents     Int
+  sortOrder      Int    @default(0)
+
+  estimate Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+
+  @@index([estimateId, sortOrder])
 }
