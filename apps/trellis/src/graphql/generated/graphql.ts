@@ -366,6 +366,22 @@ export type CreateLeadMutation = {
   createLead: { success: boolean; leadId: string | null; message: string };
 };
 
+export type CustomersQueryVariables = Exact<{
+  search?: string | null | undefined;
+}>;
+
+export type CustomersQuery = {
+  customers: Array<{
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string | null;
+    updatedAt: string;
+    properties: Array<{ id: string; addressLine1: string; city: string; state: string }>;
+  }>;
+};
+
 export type CustomerDetailsQueryVariables = Exact<{
   id: string | number;
 }>;
@@ -413,6 +429,31 @@ export type ScheduleConsultationMutationVariables = Exact<{
 }>;
 
 export type ScheduleConsultationMutation = { scheduleConsultation: { id: string } };
+
+export type DashboardAttentionQueryVariables = Exact<{ [key: string]: never }>;
+
+export type DashboardAttentionQuery = {
+  newLeads: Array<{ id: string }>;
+  consultations: Array<{ id: string; scheduledStart: string; status: ConsultationStatus }>;
+  openEstimates: Array<{ id: string }>;
+};
+
+export type EstimatesQueryVariables = Exact<{
+  search?: string | null | undefined;
+  status?: EstimateStatus | null | undefined;
+}>;
+
+export type EstimatesQuery = {
+  estimates: Array<{
+    id: string;
+    status: EstimateStatus;
+    details: string | null;
+    totalCents: number;
+    updatedAt: string;
+    completedAt: string | null;
+    lead: { id: string; firstName: string; lastName: string; email: string };
+  }>;
+};
 
 export type EstimateContextQueryVariables = Exact<{
   leadId: string | number;
@@ -1398,6 +1439,63 @@ export const CreateLeadDocument = {
     },
   ],
 } as unknown as DocumentNode<CreateLeadMutation, CreateLeadMutationVariables>;
+export const CustomersDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "Customers" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "search" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "customers" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "search" },
+                value: { kind: "Variable", name: { kind: "Name", value: "search" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "id" } },
+                { kind: "Field", name: { kind: "Name", value: "firstName" } },
+                { kind: "Field", name: { kind: "Name", value: "lastName" } },
+                { kind: "Field", name: { kind: "Name", value: "email" } },
+                { kind: "Field", name: { kind: "Name", value: "phone" } },
+                { kind: "Field", name: { kind: "Name", value: "updatedAt" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "properties" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "id" } },
+                      { kind: "Field", name: { kind: "Name", value: "addressLine1" } },
+                      { kind: "Field", name: { kind: "Name", value: "city" } },
+                      { kind: "Field", name: { kind: "Name", value: "state" } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CustomersQuery, CustomersQueryVariables>;
 export const CustomerDetailsDocument = {
   kind: "Document",
   definitions: [
@@ -1547,6 +1645,139 @@ export const ScheduleConsultationDocument = {
     },
   ],
 } as unknown as DocumentNode<ScheduleConsultationMutation, ScheduleConsultationMutationVariables>;
+export const DashboardAttentionDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "DashboardAttention" },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "newLeads" },
+            name: { kind: "Name", value: "leads" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "status" },
+                value: { kind: "EnumValue", value: "NEW" },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [{ kind: "Field", name: { kind: "Name", value: "id" } }],
+            },
+          },
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "consultations" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "scope" },
+                value: { kind: "EnumValue", value: "ALL" },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "id" } },
+                { kind: "Field", name: { kind: "Name", value: "scheduledStart" } },
+                { kind: "Field", name: { kind: "Name", value: "status" } },
+              ],
+            },
+          },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "openEstimates" },
+            name: { kind: "Name", value: "estimates" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "status" },
+                value: { kind: "EnumValue", value: "DRAFT" },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [{ kind: "Field", name: { kind: "Name", value: "id" } }],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<DashboardAttentionQuery, DashboardAttentionQueryVariables>;
+export const EstimatesDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "Estimates" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "search" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "status" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "EstimateStatus" } },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "estimates" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "search" },
+                value: { kind: "Variable", name: { kind: "Name", value: "search" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "status" },
+                value: { kind: "Variable", name: { kind: "Name", value: "status" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "id" } },
+                { kind: "Field", name: { kind: "Name", value: "status" } },
+                { kind: "Field", name: { kind: "Name", value: "details" } },
+                { kind: "Field", name: { kind: "Name", value: "totalCents" } },
+                { kind: "Field", name: { kind: "Name", value: "updatedAt" } },
+                { kind: "Field", name: { kind: "Name", value: "completedAt" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "lead" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "id" } },
+                      { kind: "Field", name: { kind: "Name", value: "firstName" } },
+                      { kind: "Field", name: { kind: "Name", value: "lastName" } },
+                      { kind: "Field", name: { kind: "Name", value: "email" } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<EstimatesQuery, EstimatesQueryVariables>;
 export const EstimateContextDocument = {
   kind: "Document",
   definitions: [

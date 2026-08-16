@@ -1,0 +1,13 @@
+query DashboardAttention {
+  newLeads: leads(status: NEW) {
+    id
+  }
+  consultations(scope: ALL) {
+    id
+    scheduledStart
+    status
+  }
+  openEstimates: estimates(status: DRAFT) {
+    id
+  }
+}

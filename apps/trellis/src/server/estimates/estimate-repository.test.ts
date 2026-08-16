@@ -2,12 +2,25 @@ import { describe, expect, it, vi } from "vitest";
 import {
   completeEstimateForOrganization,
   createEstimateForLead,
+  findEstimatesForOrganization,
   updateEstimateForOrganization,
 } from "./estimate-repository";
 
 const membership = { id: "membership-1" };
 
 describe("tenant-scoped estimates", () => {
+  it("lists estimates only within the active organization", async () => {
+    const findMany = vi.fn().mockResolvedValue([]);
+    await findEstimatesForOrganization({ estimate: { findMany } } as never, "organization-1", {
+      status: "DRAFT",
+    });
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ organizationId: "organization-1", status: "DRAFT" }),
+      }),
+    );
+  });
+
   it("creates a draft and calculates line totals on the server", async () => {
     const estimate = { id: "estimate-1", status: "DRAFT", totalCents: 25000 };
     const tx = {

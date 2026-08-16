@@ -1,3 +1,20 @@
+query Customers($search: String) {
+  customers(search: $search) {
+    id
+    firstName
+    lastName
+    email
+    phone
+    updatedAt
+    properties {
+      id
+      addressLine1
+      city
+      state
+    }
+  }
+}
+
 query CustomerDetails($id: ID!) {
   customer(id: $id) {
     id

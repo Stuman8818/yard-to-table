@@ -3,12 +3,14 @@ export const typeDefs = `#graphql
     health: Health!
     leads(search: String, status: LeadStatus, sort: LeadSort = NEWEST): [Lead!]!
     lead(id: ID!): Lead
+    customers(search: String): [Customer!]!
     customer(id: ID!): Customer
     consultations(scope: ConsultationScope = UPCOMING): [Consultation!]!
     consultation(id: ID!): Consultation
     assessment(id: ID!): PropertyAssessment
     assessmentContext(consultationId: ID!): PropertyAssessmentContext
     estimate(id: ID!): Estimate
+    estimates(search: String, status: EstimateStatus): [Estimate!]!
     estimateContext(leadId: ID!): EstimateContext
   }
 
